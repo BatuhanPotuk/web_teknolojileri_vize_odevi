@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Günün Menüsü · Yemekhane Otomasyonu</title>
+  <link rel="stylesheet" href="/css/temel.css">
+  <style>
+    .nav-bar {
+      background: var(--ana-koyu);
+      color: #fff;
+      padding: 0.75rem 1rem;
+      margin-bottom: 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .nav-links a {
+      color: #fff;
+      text-decoration: none;
+      margin-left: 1rem;
+      font-weight: 500;
+      font-size: var(--boyut-kucuk);
+    }
+    .nav-links a:hover { text-decoration: underline; }
+    .kart {
+      background: var(--yuzey);
+      padding: 1.5rem;
+      border-radius: var(--kose);
+      border: 1px solid var(--cizgi);
+      margin-bottom: 1.5rem;
+    }
+    .filtre-alani {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .menu-baslik {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      border-bottom: 2px solid var(--zemin);
+      padding-bottom: 0.75rem;
+      margin-bottom: 1rem;
+    }
+    .kalori-rozet {
+      background: #E8F5E9;
+      color: #2E7D32;
+      padding: 0.35rem 0.75rem;
+      border-radius: 20px;
+      font-weight: bold;
+      font-size: var(--boyut-kucuk);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+    .fiyat-bilgi {
+      display: flex;
+      gap: 1.5rem;
+      margin-bottom: 1.25rem;
+      background: var(--zemin);
+      padding: 0.75rem 1rem;
+      border-radius: var(--kose);
+      font-size: var(--boyut-kucuk);
+    }
+    .yemek-listesi {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .yemek-ogesi {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem;
+      background: #FAFAFA;
+      border-radius: var(--kose);
+      border-left: 4px solid var(--ana);
+    }
+    .yemek-detay {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+    .kategori-etiket {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: var(--metin-soluk);
+    }
+    .yemek-ad {
+      font-weight: 600;
+      font-size: 1.05rem;
+    }
+    .rozetler {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.25rem;
+    }
+    .rozet-vej {
+      background: #C8E6C9;
+      color: #1B5E20;
+      font-size: 0.75rem;
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+    .rozet-alerjen {
+      background: #FFF3E0;
+      color: #E65100;
+      font-size: 0.75rem;
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+    }
+    .kalori-deger {
+      font-weight: bold;
+      color: var(--metin-soluk);
+      white-space: nowrap;
+    }
+    .bildirim-gizli { display: none; }
+  </style>
+</head>
+<body>
+  <header class="nav-bar">
+    <div style="font-weight:bold; font-size:1.1rem;">🍽️ Yemekhane Otomasyonu</div>
+    <nav class="nav-links">
+      <a href="/index.html">Profil / Giriş</a>
+      <a href="/menu.html" style="text-decoration:underline;">Günün Menüsü</a>
+      <a href="/week.html">Haftalık Menü</a>
+      <a href="/reservations.html">Rezervasyonlarım</a>
+      <a href="/balance.html">Bakiye</a>
+      <a href="/review.html">Değerlendirme</a>
+    </nav>
+  </header>
+
+  <main class="kapsayici">
+    <h1>Günün Menüsü</h1>
+    <p class="alt" style="color:var(--metin-soluk);">Günlük yemek listesini, besin değerlerini ve alerjen uyarılarını inceleyin.</p>
+
+    <!-- FİLTRELER -->
+    <div class="kart">
+      <div class="filtre-alani">
+        <div>
+          <label for="sel-yemekhane">Yemekhane</label>
+          <select id="sel-yemekhane" onchange="menuyuYukle()">
+            <option value="1">Merkez Yemekhane</option>
+            <option value="2">Mühendislik Yemekhanesi</option>
+          </select>
+        </div>
+        <div>
+          <label for="sel-ogun">Öğün</label>
+          <select id="sel-ogun" onchange="menuyuYukle()">
+            <option value="2" selected>Öğle Yemeği</option>
+            <option value="3">Akşam Yemeği</option>
+          </select>
+        </div>
+        <div>
+          <label for="inp-tarih">Tarih</label>
+          <input type="date" id="inp-tarih" onchange="menuyuYukle()">
+        </div>
+      </div>
+    </div>
+
+    <div id="hata-kutusu" class="bildirim bildirim-hata bildirim-gizli" style="margin-bottom:1rem;"></div>
+
+    <!-- MENÜ DETAY KARTI -->
+    <div id="menu-karti" class="kart bildirim-gizli">
+      <div class="menu-baslik">
+        <div>
+          <h2 id="menu-baslik-yazi" style="margin-bottom:0.25rem;">-</h2>
+          <span id="menu-tarih" style="color:var(--metin-soluk); font-size:var(--boyut-kucuk);">-</span>
+        </div>
+        <div class="kalori-rozet">
+          🔥 Toplam: <span id="toplam-kalori">0</span> kcal
+        </div>
+      </div>
+
+      <div class="fiyat-bilgi">
+        <div><strong>Öğrenci:</strong> <span id="fiyat-ogrenci" style="color:var(--ana-koyu); font-weight:bold;">-</span> TL</div>
+        <div><strong>Personel:</strong> <span id="fiyat-personel" style="color:var(--metin); font-weight:bold;">-</span> TL</div>
+        <div><strong>Son Rezervasyon:</strong> <span id="son-rezervasyon">-</span></div>
+      </div>
+
+      <h3 style="margin-bottom:0.75rem;">Yemek Listesi</h3>
+      <ul class="yemek-listesi" id="yemek-listesi"></ul>
+
+      <div style="margin-top:1.5rem; padding-top:1rem; border-top:1px solid var(--cizgi); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+        <div>
+          <span style="font-size:var(--boyut-kucuk); color:var(--metin-soluk);">Menü Kodu: <strong id="lbl-menu-id">#1</strong></span>
+        </div>
+        <button type="button" class="dugme" id="btn-tek-gun-rezervasyon" onclick="tekGunRezervasyonYap()">Bu Menüye Rezervasyon Yap</button>
+      </div>
+    </div>
+  </main>
+
+  <script src="/js/api.js"></script>
+  <script>
+    // Varsayılan tarihi bugün yap (YYYY-MM-DD)
+    const bugun = new Date().toISOString().split('T')[0];
+    document.getElementById('inp-tarih').value = bugun;
+
+    async function yemekhaneleriYukle() {
+      try {
+        const yhs = await API.getCafeterias();
+        const sel = document.getElementById('sel-yemekhane');
+        sel.innerHTML = '';
+        yhs.forEach(y => {
+          const opt = document.createElement('option');
+          opt.value = y.id;
+          opt.textContent = `${y.ad} (Kapasite: ${y.kapasite})`;
+          sel.appendChild(opt);
+        });
+      } catch (e) {
+        console.warn('Yemekhaneler API hatası, varsayılan liste kalıyor:', e);
+      }
+    }
+
+    async function ogunleriYukle() {
+      try {
+        const ogs = await API.getMeals();
+        const sel = document.getElementById('sel-ogun');
+        sel.innerHTML = '';
+        ogs.forEach(o => {
+          const opt = document.createElement('option');
+          opt.value = o.id;
+          opt.textContent = o.ad;
+          if (o.id === 2) opt.selected = true;
+          sel.appendChild(opt);
+        });
+      } catch (e) {
+        console.warn('Öğünler API hatası, varsayılan liste kalıyor:', e);
+      }
+    }
+
+    async function menuyuYukle() {
+      const yhId = document.getElementById('sel-yemekhane').value;
+      const ogunId = document.getElementById('sel-ogun').value;
+      const tarih = document.getElementById('inp-tarih').value;
+
+      const hataKutusu = document.getElementById('hata-kutusu');
+      const menuKarti = document.getElementById('menu-karti');
+
+      hataKutusu.classList.add('bildirim-gizli');
+      menuKarti.classList.add('bildirim-gizli');
+
+      try {
+        const menu = await API.getTodayMenu(yhId, ogunId, tarih);
+
+        document.getElementById('menu-baslik-yazi').textContent = `${menu.yemekhane} · ${menu.ogun}`;
+        document.getElementById('menu-tarih').textContent = `Tarih: ${menu.tarih}`;
+        document.getElementById('toplam-kalori').textContent = menu.toplam_kalori;
+        document.getElementById('fiyat-ogrenci').textContent = Number(menu.ogrenci_fiyati).toFixed(2);
+        document.getElementById('fiyat-personel').textContent = Number(menu.personel_fiyati).toFixed(2);
+        document.getElementById('son-rezervasyon').textContent = menu.rezervasyon_son;
+
+        const liste = document.getElementById('yemek-listesi');
+        liste.innerHTML = '';
+
+        menu.yemekler.forEach(y => {
+          const li = document.createElement('li');
+          li.className = 'yemek-ogesi';
+
+          let rozetHtml = '';
+          if (y.vejetaryen) {
+            rozetHtml += `<span class="rozet-vej">🌱 Vejetaryen</span>`;
+          }
+          if (y.alerjenler) {
+            rozetHtml += `<span class="rozet-alerjen">⚠️ Alerjen: ${y.alerjenler}</span>`;
+          }
+
+          li.innerHTML = `
+            <div class="yemek-detay">
+              <span class="kategori-etiket">${y.kategori}</span>
+              <span class="yemek-ad">${y.ad}</span>
+              ${rozetHtml ? `<div class="rozetler">${rozetHtml}</div>` : ''}
+            </div>
+            <div class="kalori-deger">${y.kalori} kcal</div>
+          `;
+          liste.appendChild(li);
+        });
+
+        document.getElementById('lbl-menu-id').textContent = '#' + menu.menu_id;
+        window.aktifMenuId = menu.menu_id;
+
+        menuKarti.classList.remove('bildirim-gizli');
+      } catch (err) {
+        hataKutusu.textContent = err.message || 'Belirtilen kriterlerde menü bulunamadı.';
+        hataKutusu.classList.remove('bildirim-gizli');
+      }
+    }
+
+    async function tekGunRezervasyonYap() {
+      const user = API.getUser();
+      if (!user) {
+        alert('Rezervasyon yapabilmek için lütfen önce giriş yapın.');
+        window.location.href = '/index.html';
+        return;
+      }
+
+      const menuId = window.aktifMenuId;
+      if (!menuId) return;
+
+      const hataKutusu = document.getElementById('hata-kutusu');
+      hataKutusu.classList.add('bildirim-gizli');
+
+      try {
+        const res = await API.makeReservation(menuId);
+        hataKutusu.className = 'bildirim bildirim-basari';
+        hataKutusu.textContent = `Menü #${menuId} için rezervasyon başarıyla oluşturuldu! Kesilen Ücret: ${Number(res.ucret).toFixed(2)} TL, Kalan Bakiyeniz: ${Number(res.yeni_bakiye).toFixed(2)} TL.`;
+        hataKutusu.classList.remove('bildirim-gizli');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } catch (err) {
+        hataKutusu.className = 'bildirim bildirim-hata';
+        hataKutusu.textContent = err.message || 'Rezervasyon yapılamadı.';
+        hataKutusu.classList.remove('bildirim-gizli');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+
+    // İlk yükleme
+    (async function init() {
+      await yemekhaneleriYukle();
+      await ogunleriYukle();
+      await menuyuYukle();
+    })();
+  </script>
+</body>
+</html>

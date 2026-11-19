@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bakiye İşlemleri · Yemekhane Otomasyonu</title>
+  <link rel="stylesheet" href="/css/temel.css">
+  <style>
+    .nav-bar {
+      background: var(--ana-koyu);
+      color: #fff;
+      padding: 0.75rem 1rem;
+      margin-bottom: 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .nav-links a {
+      color: #fff;
+      text-decoration: none;
+      margin-left: 1rem;
+      font-weight: 500;
+      font-size: var(--boyut-kucuk);
+    }
+    .nav-links a:hover { text-decoration: underline; }
+    .kart {
+      background: var(--yuzey);
+      padding: 1.5rem;
+      border-radius: var(--kose);
+      border: 1px solid var(--cizgi);
+      margin-bottom: 1.5rem;
+    }
+    .bakiye-kutu {
+      background: #E8F5E9;
+      border-left: 6px solid #2E7D32;
+      padding: 1.25rem;
+      border-radius: var(--kose);
+      margin-bottom: 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .bakiye-sayi {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #1B5E20;
+    }
+    .hizli-tutar-butonlari {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+    .tutar-btn {
+      background: var(--zemin);
+      border: 1px solid var(--cizgi);
+      padding: 0.4rem 0.8rem;
+      border-radius: var(--kose);
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+    .tutar-btn:hover { background: #D5DFDC; }
+    .tablo {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.95rem;
+    }
+    .tablo th, .tablo td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--cizgi);
+      vertical-align: middle;
+    }
+    .tablo th { background: var(--zemin); font-weight: 600; }
+    .tablo tr:hover { background: #FAFAF8; }
+    .artis { color: #2E7D32; font-weight: bold; }
+    .azalis { color: #C62828; font-weight: bold; }
+    .bildirim-gizli { display: none; }
+  </style>
+</head>
+<body>
+  <header class="nav-bar">
+    <div style="font-weight:bold; font-size:1.1rem;">🍽️ Yemekhane Otomasyonu</div>
+    <nav class="nav-links">
+      <a href="/index.html">Profil / Giriş</a>
+      <a href="/menu.html">Günün Menüsü</a>
+      <a href="/week.html">Haftalık Menü</a>
+      <a href="/reservations.html">Rezervasyonlarım</a>
+      <a href="/balance.html" style="text-decoration:underline;">Bakiye</a>
+    </nav>
+  </header>
+
+  <main class="kapsayici">
+    <h1>Bakiye Yönetimi</h1>
+    <p class="alt" style="color:var(--metin-soluk);">Yemekhane kartınıza bakiye yükleyin ve harcama geçmişinizi takip edin.</p>
+
+    <!-- GÜNCEL BAKİYE KARTI -->
+    <div class="bakiye-kutu">
+      <div>
+        <div style="color:var(--metin-soluk); font-size:var(--boyut-kucuk);">GÜNCEL HESAP BAKİYENİZ</div>
+        <div class="bakiye-sayi"><span id="span-bakiye">0.00</span> TL</div>
+      </div>
+      <div>
+        <span id="span-kullanici-ad" style="font-weight:600;">-</span>
+      </div>
+    </div>
+
+    <div id="bildirim-alani" class="bildirim bildirim-gizli" style="margin-bottom:1.5rem;"></div>
+
+    <!-- BAKİYE YÜKLEME FORMU -->
+    <div class="kart">
+      <h2>Bakiye Yükle</h2>
+      <p class="alt" style="color:var(--metin-soluk); font-size:var(--boyut-kucuk);">Yükleme tutarı 10 TL ile 1000 TL arasında olmalıdır.</p>
+
+      <form id="form-bakiye-yukle">
+        <label for="inp-tutar">Yüklenecek Tutar (TL)</label>
+        <input type="number" id="inp-tutar" min="10" max="1000" step="5" required placeholder="Örn: 100">
+
+        <div class="hizli-tutar-butonlari">
+          <button type="button" class="tutar-btn" onclick="tutarAyarla(50)">+50 TL</button>
+          <button type="button" class="tutar-btn" onclick="tutarAyarla(100)">+100 TL</button>
+          <button type="button" class="tutar-btn" onclick="tutarAyarla(250)">+250 TL</button>
+          <button type="button" class="tutar-btn" onclick="tutarAyarla(500)">+500 TL</button>
+        </div>
+
+        <button type="submit" class="dugme" id="btn-yukle" style="min-width:180px;">Bakiye Yükle</button>
+      </form>
+    </div>
+
+    <!-- HAREKET GEÇMİŞİ -->
+    <div class="kart tablo-kaydir">
+      <h2>Bakiye Hareket Geçmişi</h2>
+      <table class="tablo">
+        <thead>
+          <tr>
+            <th>İşlem ID</th>
+            <th>Tarih & Saat</th>
+            <th>İşlem Türü</th>
+            <th>Tutar</th>
+            <th>Açıklama</th>
+          </tr>
+        </thead>
+        <tbody id="hareket-tablo-govde">
+          <tr><td colspan="5" style="text-align:center;">Kayıtlar yükleniyor…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <script src="/js/api.js"></script>
+  <script>
+    function tutarAyarla(val) {
+      document.getElementById('inp-tutar').value = val;
+    }
+
+    async function bakiyeYukleVeGoster() {
+      const user = API.getUser();
+      if (!user) {
+        alert('Bakiye işlemlerini görüntülemek için lütfen önce giriş yapın.');
+        window.location.href = '/index.html';
+        return;
+      }
+
+      document.getElementById('span-kullanici-ad').textContent = user.ad + ' ' + user.soyad;
+
+      try {
+        const data = await API.getBalance();
+        document.getElementById('span-bakiye').textContent = Number(data.bakiye).toFixed(2);
+
+        const govde = document.getElementById('hareket-tablo-govde');
+        if (!data.hareketler || data.hareketler.length === 0) {
+          govde.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--metin-soluk);">Bakiye hareketi bulunmuyor.</td></tr>';
+          return;
+        }
+
+        govde.innerHTML = '';
+        data.hareketler.forEach(h => {
+          const tr = document.createElement('tr');
+          const isArtis = (h.tutar > 0);
+          const tutarClass = isArtis ? 'artis' : 'azalis';
+          const tutarMetin = (isArtis ? '+' : '') + Number(h.tutar).toFixed(2) + ' TL';
+
+          tr.innerHTML = `
+            <td>#${h.id}</td>
+            <td style="font-size:0.85rem; color:var(--metin-soluk);">${h.zaman}</td>
+            <td><strong>${h.tur.toUpperCase()}</strong></td>
+            <td class="${tutarClass}">${tutarMetin}</td>
+            <td style="color:var(--metin-soluk); font-size:0.9rem;">${h.aciklama || '-'}</td>
+          `;
+          govde.appendChild(tr);
+        });
+      } catch (err) {
+        console.error('Bakiye yükleme hatası:', err);
+      }
+    }
+
+    document.getElementById('form-bakiye-yukle').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const tutar = parseFloat(document.getElementById('inp-tutar').value);
+      const bildirim = document.getElementById('bildirim-alani');
+      const btn = document.getElementById('btn-yukle');
+
+      bildirim.classList.add('bildirim-gizli');
+      btn.disabled = true;
+      btn.textContent = 'Yükleniyor…';
+
+      try {
+        const res = await API.topupBalance(tutar);
+        bildirim.className = 'bildirim bildirim-basari';
+        bildirim.textContent = `Tebrikler! ${tutar.toFixed(2)} TL başarıyla yüklendi. Güncel Bakiyeniz: ${Number(res.yeni_bakiye).toFixed(2)} TL.`;
+        bildirim.classList.remove('bildirim-gizli');
+
+        document.getElementById('inp-tutar').value = '';
+        await bakiyeYukleVeGoster();
+      } catch (err) {
+        bildirim.className = 'bildirim bildirim-hata';
+        bildirim.textContent = err.message || 'Bakiye yükleme başarısız.';
+        bildirim.classList.remove('bildirim-gizli');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Bakiye Yükle';
+      }
+    });
+
+    bakiyeYukleVeGoster();
+  </script>
+</body>
+</html>

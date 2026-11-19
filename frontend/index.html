@@ -3,68 +3,166 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Yemekhane Otomasyonu · Başlangıç</title>
+  <title>Giriş Yap · Yemekhane Otomasyonu</title>
   <link rel="stylesheet" href="/css/temel.css">
   <style>
-    /* Yalnızca bu geçici sayfaya ait stiller */
-    .fis {
+    .kart {
       background: var(--yuzey);
-      margin-block: 2rem;
-      padding: 1.5rem var(--bosluk);
+      margin: 2rem auto;
+      padding: 1.5rem;
       border-radius: var(--kose);
-      /* yemek fişi görünümü: alt kenarda yırtma çizgisi */
-      border-bottom: 2px dashed var(--cizgi);
+      border: 1px solid var(--cizgi);
+      max-width: 440px;
     }
-    .fis h1 { margin-bottom: 0.25rem; }
-    .fis .alt { color: var(--metin-soluk); margin-bottom: 1.5rem; }
-    .servisler { width: 100%; border-collapse: collapse; font-size: var(--boyut-kucuk); }
-    .servisler th, .servisler td { text-align: left; padding: 0.5rem 0.25rem; border-bottom: 1px solid var(--cizgi); }
-    .servisler td:last-child { white-space: nowrap; }
-    #uygulama-durumu { margin-top: 1.5rem; }
+    .alan { margin-bottom: 1rem; }
+    .bilgi-kutu {
+      background: #E8F0FE;
+      border-left: 4px solid #1B6B5A;
+      padding: 0.75rem;
+      font-size: var(--boyut-kucuk);
+      margin-bottom: 1.25rem;
+      border-radius: 4px;
+    }
+    .bildirim-gizli { display: none; }
+    .profil-detay {
+      background: #F4F7F6;
+      padding: 1rem;
+      border-radius: var(--kose);
+      margin-bottom: 1rem;
+    }
+    .bakiye-vurgu {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: var(--ana-koyu);
+    }
+    .cikis-btn {
+      background: var(--hata);
+      color: #fff;
+      border: none;
+      padding: 0.6rem 1.2rem;
+      border-radius: var(--kose);
+      cursor: pointer;
+      font-weight: 600;
+      min-height: 44px;
+      width: 100%;
+    }
   </style>
 </head>
 <body>
   <main class="kapsayici">
-    <section class="fis">
-      <h1>Yemekhane Otomasyonu</h1>
-      <p class="alt">Apache çalışıyor. Bu sayfa başlangıç paketine ait; kendi giriş ekranınızla değiştirin.</p>
+    <!-- GİRİŞ FORMU KARTI -->
+    <section id="giris-karti" class="kart">
+      <h1>Yemekhane Girişi</h1>
+      <p class="alt" style="color:var(--metin-soluk); margin-bottom:1.25rem;">Lütfen kurumsal e-posta ve şifrenizle giriş yapın.</p>
 
-      <div class="tablo-kaydir">
-        <table class="servisler">
-          <thead>
-            <tr><th>Servis</th><th>Görevi</th><th>Bilgisayarınızdan</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>frontend</td><td>HTML/CSS, yönlendirme</td><td>localhost:8080</td></tr>
-            <tr><td>mysql-primary</td><td>yazma</td><td>localhost:3307</td></tr>
-            <tr><td>mysql-replica</td><td>okuma, salt okunur</td><td>localhost:3308</td></tr>
-            <tr><td>redis</td><td>menü önbelleği, oturum</td><td>localhost:6379</td></tr>
-            <tr><td>uygulama</td><td>sizin yazacağınız servis</td><td>Apache üzerinden</td></tr>
-          </tbody>
-        </table>
+      <div id="hata-kutusu" class="bildirim bildirim-hata bildirim-gizli"></div>
+
+      <form id="giris-formu">
+        <div class="alan">
+          <label for="eposta">E-posta Adresi</label>
+          <input type="email" id="eposta" required placeholder="ornek@kampus.edu.tr">
+        </div>
+
+        <div class="alan">
+          <label for="sifre">Şifre</label>
+          <input type="password" id="sifre" required placeholder="••••••••">
+        </div>
+
+        <button type="submit" class="dugme" style="width:100%;" id="giris-btn">Giriş Yap</button>
+      </form>
+    </section>
+
+    <!-- GİRİŞ YAPILMIŞ KULLANICI KARTI -->
+    <section id="profil-karti" class="kart bildirim-gizli">
+      <h1>Hoş Geldiniz</h1>
+      <div class="profil-detay">
+        <p><strong>Ad Soyad:</strong> <span id="kullanici-ad"></span></p>
+        <p><strong>Rol:</strong> <span id="kullanici-rol"></span></p>
+        <p><strong>E-posta:</strong> <span id="kullanici-eposta"></span></p>
+        <p id="p-ogrenci-no"><strong>Öğrenci No:</strong> <span id="kullanici-ogrenci-no"></span></p>
+        <p><strong>Güncel Bakiye:</strong> <br><span class="bakiye-vurgu" id="kullanici-bakiye"></span> TL</p>
       </div>
 
-      <p id="uygulama-durumu" class="bildirim" role="status">Uygulama servisi kontrol ediliyor…</p>
+      <div style="display:flex; flex-direction:column; gap:0.5rem; margin-bottom:1rem;">
+        <a href="/menu.html" class="dugme" style="text-align:center;">🍲 Günün Menüsünü Gör</a>
+        <a href="/week.html" class="dugme" style="text-align:center; background:#12503F;">📅 Haftalık Menü & Rezervasyon</a>
+        <a href="/reservations.html" class="dugme" style="text-align:center; background:#1B6B5A;">📋 Rezervasyonlarım & İptal</a>
+        <a href="/balance.html" class="dugme" style="text-align:center; background:#2E7D32;">💳 Bakiye Yükle / Hareketler</a>
+        <a href="/review.html" class="dugme" style="text-align:center; background:#D97706;">⭐ Menü Değerlendirme & Yorum</a>
+        <a href="/admin.html" id="link-admin" class="dugme bildirim-gizli" style="text-align:center; background:#4B5563;">⚙️ Yönetici Paneli</a>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:0.5rem;">
+        <button type="button" class="cikis-btn" onclick="cikisYap()">Güvenli Çıkış Yap</button>
+      </div>
     </section>
   </main>
 
+  <script src="/js/api.js"></script>
   <script>
-    // Web API modunda /api/ isteği uygulamaya gider. 502/503 ise uygulama yok ya da çalışmıyor.
-    const kutu = document.getElementById('uygulama-durumu');
-    fetch('/api/', { headers: { Accept: 'application/json' } })
-      .then(yanit => {
-        if (yanit.status === 502 || yanit.status === 503) {
-          kutu.textContent = 'Uygulama servisine ulaşılamıyor. docker-compose.yml içindeki uygulama servisini ekleyip "docker compose up -d" çalıştırın.';
-          kutu.classList.add('bildirim-hata');
+    function ekraniGuncelle() {
+      const user = API.getUser();
+      const girisKarti = document.getElementById('giris-karti');
+      const profilKarti = document.getElementById('profil-karti');
+
+      if (user) {
+        girisKarti.classList.add('bildirim-gizli');
+        profilKarti.classList.remove('bildirim-gizli');
+
+        document.getElementById('kullanici-ad').textContent = user.ad + ' ' + user.soyad;
+        document.getElementById('kullanici-rol').textContent = user.rol.toUpperCase();
+        document.getElementById('kullanici-eposta').textContent = user.eposta;
+        document.getElementById('kullanici-bakiye').textContent = Number(user.bakiye).toFixed(2);
+
+        if (user.ogrenci_no) {
+          document.getElementById('p-ogrenci-no').style.display = 'block';
+          document.getElementById('kullanici-ogrenci-no').textContent = user.ogrenci_no;
         } else {
-          kutu.textContent = 'Uygulama servisi yanıt veriyor (HTTP ' + yanit.status + ').';
-          kutu.classList.add('bildirim-basari');
+          document.getElementById('p-ogrenci-no').style.display = 'none';
         }
-      })
-      .catch(() => {
-        kutu.textContent = 'İstek gönderilemedi. Apache günlüğüne bakın: docker compose logs frontend';
-        kutu.classList.add('bildirim-hata');
-      });
+
+        const linkAdmin = document.getElementById('link-admin');
+        if (user.rol === 'yonetici') {
+          linkAdmin.classList.remove('bildirim-gizli');
+        } else {
+          linkAdmin.classList.add('bildirim-gizli');
+        }
+      } else {
+        girisKarti.classList.remove('bildirim-gizli');
+        profilKarti.classList.add('bildirim-gizli');
+      }
+    }
+
+    document.getElementById('giris-formu').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const eposta = document.getElementById('eposta').value.trim();
+      const sifre = document.getElementById('sifre').value;
+      const hataKutusu = document.getElementById('hata-kutusu');
+      const btn = document.getElementById('giris-btn');
+
+      hataKutusu.classList.add('bildirim-gizli');
+      btn.disabled = true;
+      btn.textContent = 'Giriş yapılıyor…';
+
+      try {
+        await API.login(eposta, sifre);
+        ekraniGuncelle();
+      } catch (err) {
+        hataKutusu.textContent = err.message || 'Giriş başarısız.';
+        hataKutusu.classList.remove('bildirim-gizli');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Giriş Yap';
+      }
+    });
+
+    async function cikisYap() {
+      await API.logout();
+      ekraniGuncelle();
+    }
+
+    // Sayfa açıldığında oturumu kontrol et
+    ekraniGuncelle();
   </script>
 </body>
 </html>

@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Menü Değerlendirme · Yemekhane Otomasyonu</title>
+  <link rel="stylesheet" href="/css/temel.css">
+  <style>
+    .nav-bar {
+      background: var(--ana-koyu);
+      color: #fff;
+      padding: 0.75rem 1rem;
+      margin-bottom: 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .nav-links a {
+      color: #fff;
+      text-decoration: none;
+      margin-left: 1rem;
+      font-weight: 500;
+      font-size: var(--boyut-kucuk);
+    }
+    .nav-links a:hover { text-decoration: underline; }
+    .kart {
+      background: var(--yuzey);
+      padding: 1.5rem;
+      border-radius: var(--kose);
+      border: 1px solid var(--cizgi);
+      margin-bottom: 1.5rem;
+    }
+    .yildiz-alani {
+      display: flex;
+      gap: 0.5rem;
+      font-size: 1.75rem;
+      cursor: pointer;
+      margin: 0.5rem 0 1rem;
+      color: #D1D5DB;
+    }
+    .yildiz-alani .secili { color: #F59E0B; }
+    .ortalama-kutu {
+      background: #FEF3C7;
+      border-left: 4px solid #F59E0B;
+      padding: 1rem;
+      border-radius: var(--kose);
+      margin-bottom: 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .ortalama-deger {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #B45309;
+    }
+    .yorum-karti {
+      border-bottom: 1px solid var(--cizgi);
+      padding: 1rem 0;
+    }
+    .yorum-karti:last-child { border-bottom: none; }
+    .yorum-ust {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.35rem;
+    }
+    .bildirim-gizli { display: none; }
+  </style>
+</head>
+<body>
+  <header class="nav-bar">
+    <div style="font-weight:bold; font-size:1.1rem;">🍽️ Yemekhane Otomasyonu</div>
+    <nav class="nav-links">
+      <a href="/index.html">Profil / Giriş</a>
+      <a href="/menu.html">Günün Menüsü</a>
+      <a href="/week.html">Haftalık Menü</a>
+      <a href="/reservations.html">Rezervasyonlarım</a>
+      <a href="/balance.html">Bakiye</a>
+      <a href="/review.html" style="text-decoration:underline;">Değerlendirme</a>
+    </nav>
+  </header>
+
+  <main class="kapsayici">
+    <h1>Menü Değerlendirme</h1>
+    <p class="alt" style="color:var(--metin-soluk);">Yediğiniz menüleri 1-5 yıldız arasında puanlayın, görüşlerinizi paylaşın.</p>
+
+    <div class="kart">
+      <div style="display:flex; gap:1rem; flex-wrap:wrap; margin-bottom:1rem;">
+        <div style="flex:1; min-width:200px;">
+          <label for="sel-menu-id">Değerlendirilecek Menü ID</label>
+          <input type="number" id="sel-menu-id" value="1" min="1" onchange="degerlendirmeleriGetir()">
+        </div>
+        <div style="display:flex; align-items:flex-end;">
+          <button type="button" class="dugme" onclick="degerlendirmeleriGetir()">Menü Yorumlarını Getir</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="bildirim-alani" class="bildirim bildirim-gizli" style="margin-bottom:1.5rem;"></div>
+
+    <!-- ORTALAMA PUAN KUTUSU -->
+    <div class="ortalama-kutu">
+      <div>
+        <div style="font-weight:600; color:#B45309;">MENÜ MEMNUNİYET PUANI</div>
+        <div style="font-size:var(--boyut-kucuk); color:var(--metin-soluk);">Toplam <span id="span-toplam-sayi">0</span> değerlendirme</div>
+      </div>
+      <div class="ortalama-deger">⭐ <span id="span-ortalama">0.0</span> / 5.0</div>
+    </div>
+
+    <!-- DEĞERLENDİRME FORMU -->
+    <div class="kart">
+      <h2>Puan Ver ve Yorum Yap</h2>
+      <form id="form-degerlendirme">
+        <label>Puanınız</label>
+        <div class="yildiz-alani" id="yildizlar">
+          <span onclick="puanSec(1)">★</span>
+          <span onclick="puanSec(2)">★</span>
+          <span onclick="puanSec(3)">★</span>
+          <span onclick="puanSec(4)">★</span>
+          <span onclick="puanSec(5)">★</span>
+        </div>
+        <input type="hidden" id="inp-puan" value="5">
+
+        <label for="inp-yorum">Yorumunuz (İsteğe bağlı)</label>
+        <textarea id="inp-yorum" rows="3" placeholder="Yemek lezzeti, porsiyon veya servis hakkındaki düşünceleriniz…"></textarea>
+
+        <button type="submit" class="dugme" id="btn-gonder" style="margin-top:1rem;">Değerlendirmeyi Kaydet</button>
+      </form>
+    </div>
+
+    <!-- YORUMLAR LİSTESİ -->
+    <div class="kart">
+      <h2>Yapılan Yorumlar</h2>
+      <div id="yorumlar-kapsayici">
+        <p style="color:var(--metin-soluk);">Yorumlar yükleniyor…</p>
+      </div>
+    </div>
+  </main>
+
+  <script src="/js/api.js"></script>
+  <script>
+    let aktifPuan = 5;
+
+    function puanSec(p) {
+      aktifPuan = p;
+      document.getElementById('inp-puan').value = p;
+      const spans = document.querySelectorAll('#yildizlar span');
+      spans.forEach((s, idx) => {
+        if (idx < p) {
+          s.classList.add('secili');
+        } else {
+          s.classList.remove('secili');
+        }
+      });
+    }
+
+    puanSec(5);
+
+    async function degerlendirmeleriGetir() {
+      const menuId = document.getElementById('sel-menu-id').value;
+      const kapsayici = document.getElementById('yorumlar-kapsayici');
+
+      try {
+        const data = await API.getReviews(menuId);
+        document.getElementById('span-ortalama').textContent = Number(data.ortalama).toFixed(1);
+        document.getElementById('span-toplam-sayi').textContent = data.toplam_sayi;
+
+        if (!data.yorumlar || data.yorumlar.length === 0) {
+          kapsayici.innerHTML = '<p style="color:var(--metin-soluk);">Bu menü için henüz yorum yapılmamış. İlk yorumu siz yapın!</p>';
+          return;
+        }
+
+        kapsayici.innerHTML = '';
+        data.yorumlar.forEach(y => {
+          const div = document.createElement('div');
+          div.className = 'yorum-karti';
+          const yildizlarMetin = '★'.repeat(y.puan) + '☆'.repeat(5 - y.puan);
+
+          div.innerHTML = `
+            <div class="yorum-ust">
+              <strong>${y.kullanici}</strong>
+              <span style="color:#F59E0B; font-weight:bold;">${yildizlarMetin} (${y.puan}/5)</span>
+            </div>
+            <p style="margin-bottom:0.25rem;">${y.yorum ? y.yorum : '<em style="color:var(--metin-soluk);">Yorum belirtilmedi.</em>'}</p>
+            <div style="font-size:0.75rem; color:var(--metin-soluk);">${y.tarih}</div>
+          `;
+          kapsayici.appendChild(div);
+        });
+      } catch (err) {
+        kapsayici.innerHTML = `<p style="color:var(--hata);">${err.message}</p>`;
+      }
+    }
+
+    document.getElementById('form-degerlendirme').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const menuId = document.getElementById('sel-menu-id').value;
+      const yorum = document.getElementById('inp-yorum').value.trim();
+      const bildirim = document.getElementById('bildirim-alani');
+      const btn = document.getElementById('btn-gonder');
+
+      bildirim.classList.add('bildirim-gizli');
+      btn.disabled = true;
+
+      try {
+        const res = await API.postReview(menuId, aktifPuan, yorum);
+        bildirim.className = 'bildirim bildirim-basari';
+        bildirim.textContent = res.mesaj || 'Değerlendirmeniz kaydedildi!';
+        bildirim.classList.remove('bildirim-gizli');
+
+        document.getElementById('inp-yorum').value = '';
+        await degerlendirmeleriGetir();
+      } catch (err) {
+        bildirim.className = 'bildirim bildirim-hata';
+        bildirim.textContent = err.message || 'Değerlendirme kaydedilemedi.';
+        bildirim.classList.remove('bildirim-gizli');
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    degerlendirmeleriGetir();
+  </script>
+</body>
+</html>

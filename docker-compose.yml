@@ -32,6 +32,7 @@ x-uygulama-ortam: &uygulama-ortam
   DB_SIFRE: Uyg_2026
   REDIS_HOST: redis
   REDIS_PORT: "6379"
+  INTERNAL_TOKEN: yemekhane_ic_gizli_anahtar_2026
 
 services:
 
@@ -133,23 +134,115 @@ services:
       retries: 5
 
   # ---------------------------------------------------------------
-  # UYGULAMA · BU SERVİSİ SİZ YAZACAKSINIZ (Aşama 2)
-  # 1. ./uygulama klasörüne kodunuzu ve Dockerfile'ı koyun.
-  # 2. Uygulama container içinde 8000 portunu dinlesin (ya da UYGULAMA_ADRES'i değiştirin).
-  # 3. Aşağıdaki satırların başındaki "# " işaretlerini kaldırın.
+  # API GATEWAY (nginx:alpine, port 8000)
+  # Apache /api/ isteklerini http://uygulama:8000 adresine iletir.
   # ---------------------------------------------------------------
-  # uygulama:
-  #   build: ./uygulama
-  #   restart: unless-stopped
-  #   environment:
-  #     <<: *uygulama-ortam
-  #   depends_on:
-  #     mysql-primary:
-  #       condition: service_healthy
-  #     redis:
-  #       condition: service_healthy
-  #     replica-setup:
-  #       condition: service_completed_successfully
+  uygulama:
+    build: ./uygulama
+    restart: unless-stopped
+    volumes:
+      - ./uygulama/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      auth-servisi:
+        condition: service_healthy
+      menu-servisi:
+        condition: service_healthy
+      rezervasyon-servisi:
+        condition: service_healthy
+      degerlendirme-servisi:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8000/api/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # ---------------------------------------------------------------
+  # AUTH SERVİSİ (Django)
+  # ---------------------------------------------------------------
+  auth-servisi:
+    build: ./servisler/auth
+    restart: unless-stopped
+    volumes:
+      - ./servisler/auth:/app
+    environment:
+      <<: *uygulama-ortam
+    depends_on:
+      mysql-primary:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8000/internal/saglik"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # ---------------------------------------------------------------
+  # MENU SERVİSİ (Django)
+  # ---------------------------------------------------------------
+  menu-servisi:
+    build: ./servisler/menu
+    restart: unless-stopped
+    volumes:
+      - ./servisler/menu:/app
+    environment:
+      <<: *uygulama-ortam
+    depends_on:
+      mysql-replica:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8000/internal/saglik"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # ---------------------------------------------------------------
+  # REZERVASYON SERVİSİ (Django)
+  # ---------------------------------------------------------------
+  rezervasyon-servisi:
+    build: ./servisler/rezervasyon
+    restart: unless-stopped
+    volumes:
+      - ./servisler/rezervasyon:/app
+    environment:
+      <<: *uygulama-ortam
+    depends_on:
+      mysql-primary:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8000/internal/saglik"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # ---------------------------------------------------------------
+  # DEĞERLENDİRME SERVİSİ (Django)
+  # ---------------------------------------------------------------
+  degerlendirme-servisi:
+    build: ./servisler/degerlendirme
+    restart: unless-stopped
+    volumes:
+      - ./servisler/degerlendirme:/app
+    environment:
+      <<: *uygulama-ortam
+    depends_on:
+      mysql-primary:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8000/internal/saglik"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+
+
 
 volumes:
   mysql-primary-veri:

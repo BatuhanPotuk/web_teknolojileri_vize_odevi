@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Yönetim Paneli · Yemekhane Otomasyonu</title>
+  <link rel="stylesheet" href="/css/temel.css">
+  <style>
+    .nav-bar {
+      background: var(--ana-koyu);
+      color: #fff;
+      padding: 0.75rem 1rem;
+      margin-bottom: 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .nav-links a {
+      color: #fff;
+      text-decoration: none;
+      margin-left: 1rem;
+      font-weight: 500;
+      font-size: var(--boyut-kucuk);
+    }
+    .nav-links a:hover { text-decoration: underline; }
+    .kart {
+      background: var(--yuzey);
+      padding: 1.5rem;
+      border-radius: var(--kose);
+      border: 1px solid var(--cizgi);
+      margin-bottom: 1.5rem;
+    }
+    .ozet-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .ozet-kart {
+      background: #FAFAFA;
+      border: 1px solid var(--cizgi);
+      border-left: 5px solid var(--ana);
+      padding: 1.25rem;
+      border-radius: var(--kose);
+    }
+    .ozet-sayi {
+      font-size: 2rem;
+      font-weight: bold;
+      color: var(--ana-koyu);
+      margin-top: 0.25rem;
+    }
+    .tablo {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.95rem;
+    }
+    .tablo th, .tablo td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--cizgi);
+      vertical-align: middle;
+    }
+    .tablo th { background: var(--zemin); font-weight: 600; }
+    .tablo tr:hover { background: #FAFAF8; }
+    .cubuk-kapsayici {
+      background: #E5E7EB;
+      border-radius: 10px;
+      height: 12px;
+      overflow: hidden;
+      width: 100%;
+      max-width: 200px;
+    }
+    .cubuk-doluluk {
+      background: var(--ana);
+      height: 100%;
+    }
+    .bildirim-gizli { display: none; }
+  </style>
+</head>
+<body>
+  <header class="nav-bar">
+    <div style="font-weight:bold; font-size:1.1rem;">🍽️ Yemekhane Otomasyonu · Yönetici Paneli</div>
+    <nav class="nav-links">
+      <a href="/index.html">Profil / Çıkış</a>
+      <a href="/menu.html">Günün Menüsü</a>
+      <a href="/week.html">Haftalık Menü</a>
+      <a href="/admin.html" style="text-decoration:underline;">Yönetim</a>
+    </nav>
+  </header>
+
+  <main class="kapsayici">
+    <h1>Yönetici İstatistik Paneli</h1>
+    <p class="alt" style="color:var(--metin-soluk);">Günlük rezervasyon doluluklarını, gelirleri ve yemekhane kapasite durumunu canlı izleyin.</p>
+
+    <div id="bildirim-alani" class="bildirim bildirim-gizli" style="margin-bottom:1.5rem;"></div>
+
+    <div id="admin-icerik" class="bildirim-gizli">
+      <!-- ÖZET METRİKLER -->
+      <div class="ozet-grid">
+        <div class="ozet-kart">
+          <div style="color:var(--metin-soluk); font-size:var(--boyut-kucuk);">BUGÜNKÜ AKTİF REZERVASYON</div>
+          <div class="ozet-sayi" id="stat-rezervasyon">0</div>
+        </div>
+        <div class="ozet-kart" style="border-left-color: #2E7D32;">
+          <div style="color:var(--metin-soluk); font-size:var(--boyut-kucuk);">BUGÜNKÜ TOPLAM GELİR</div>
+          <div class="ozet-sayi" style="color:#2E7D32;" id="stat-gelir">0.00 TL</div>
+        </div>
+        <div class="ozet-kart" style="border-left-color: #F59E0B;">
+          <div style="color:var(--metin-soluk); font-size:var(--boyut-kucuk);">SİSTEM TARİHİ</div>
+          <div class="ozet-sayi" style="color:#B45309; font-size:1.5rem;" id="stat-tarih">-</div>
+        </div>
+      </div>
+
+      <!-- YEMEKHANE DOLULUK TABLOSU -->
+      <div class="kart tablo-kaydir">
+        <h2>Yemekhane Canlı Doluluk Durumu</h2>
+        <table class="tablo">
+          <thead>
+            <tr>
+              <th>Yemekhane</th>
+              <th>Kapasite</th>
+              <th>Aktif Rezervasyon</th>
+              <th>Doluluk Oranı</th>
+              <th>Grafik</th>
+            </tr>
+          </thead>
+          <tbody id="doluluk-tablo-govde">
+            <tr><td colspan="5" style="text-align:center;">İstatistikler yükleniyor…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <script src="/js/api.js"></script>
+  <script>
+    async function istatistikleriYukle() {
+      const user = API.getUser();
+      const bildirim = document.getElementById('bildirim-alani');
+      const icerik = document.getElementById('admin-icerik');
+
+      if (!user || user.rol !== 'yonetici') {
+        bildirim.className = 'bildirim bildirim-hata';
+        bildirim.textContent = 'Erişim Engellendi: Bu sayfayı görüntülemek için "yonetici" rolünde bir hesapla (Örn: leyla.arslan@kampus.edu.tr) giriş yapmalısınız.';
+        bildirim.classList.remove('bildirim-gizli');
+        icerik.classList.add('bildirim-gizli');
+        return;
+      }
+
+      try {
+        const data = await API.getAdminStats();
+        bildirim.classList.add('bildirim-gizli');
+        icerik.classList.remove('bildirim-gizli');
+
+        document.getElementById('stat-rezervasyon').textContent = data.toplam_rezervasyon;
+        document.getElementById('stat-gelir').textContent = Number(data.toplam_gelir).toFixed(2) + ' TL';
+        document.getElementById('stat-tarih').textContent = new Date().toLocaleDateString('tr-TR');
+
+        const govde = document.getElementById('doluluk-tablo-govde');
+        govde.innerHTML = '';
+        data.yemekhaneler.forEach(y => {
+          const tr = document.createElement('tr');
+          const oranSayi = parseFloat(y.doluluk_orani.replace('%', '')) || 0;
+
+          tr.innerHTML = `
+            <td><strong>${y.ad}</strong></td>
+            <td>${y.kapasite} Kişi</td>
+            <td><strong>${y.dolu}</strong> Rezervasyon</td>
+            <td><span style="font-weight:bold; color:var(--ana-koyu);">${y.doluluk_orani}</span></td>
+            <td>
+              <div class="cubuk-kapsayici">
+                <div class="cubuk-doluluk" style="width: ${Math.min(100, oranSayi)}%;"></div>
+              </div>
+            </td>
+          `;
+          govde.appendChild(tr);
+        });
+      } catch (err) {
+        bildirim.className = 'bildirim bildirim-hata';
+        bildirim.textContent = err.message || 'İstatistikler alınamadı.';
+        bildirim.classList.remove('bildirim-gizli');
+      }
+    }
+
+    istatistikleriYukle();
+  </script>
+</body>
+</html>

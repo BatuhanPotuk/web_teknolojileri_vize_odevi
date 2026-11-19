@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rezervasyonlarım · Yemekhane Otomasyonu</title>
+  <link rel="stylesheet" href="/css/temel.css">
+  <style>
+    .nav-bar {
+      background: var(--ana-koyu);
+      color: #fff;
+      padding: 0.75rem 1rem;
+      margin-bottom: 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .nav-links a {
+      color: #fff;
+      text-decoration: none;
+      margin-left: 1rem;
+      font-weight: 500;
+      font-size: var(--boyut-kucuk);
+    }
+    .nav-links a:hover { text-decoration: underline; }
+    .kart {
+      background: var(--yuzey);
+      padding: 1.5rem;
+      border-radius: var(--kose);
+      border: 1px solid var(--cizgi);
+      margin-bottom: 1.5rem;
+    }
+    .tablo {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.95rem;
+    }
+    .tablo th, .tablo td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--cizgi);
+      vertical-align: middle;
+    }
+    .tablo th {
+      background: var(--zemin);
+      font-weight: 600;
+    }
+    .tablo tr:hover { background: #FAFAF8; }
+    .durum-rozet {
+      padding: 0.25rem 0.6rem;
+      border-radius: 4px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      display: inline-block;
+    }
+    .durum-aktif { background: #E8F5E9; color: #2E7D32; }
+    .durum-iptal { background: #FFEBEE; color: #C62828; }
+    .iptal-btn {
+      background: var(--hata);
+      color: #fff;
+      border: none;
+      padding: 0.4rem 0.8rem;
+      border-radius: var(--kose);
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+    .iptal-btn:hover { background: #8E1C15; }
+    .iptal-btn:disabled {
+      background: var(--cizgi);
+      color: var(--metin-soluk);
+      cursor: not-allowed;
+    }
+    .bildirim-gizli { display: none; }
+  </style>
+</head>
+<body>
+  <header class="nav-bar">
+    <div style="font-weight:bold; font-size:1.1rem;">🍽️ Yemekhane Otomasyonu</div>
+    <nav class="nav-links">
+      <a href="/index.html">Profil / Giriş</a>
+      <a href="/menu.html">Günün Menüsü</a>
+      <a href="/week.html">Haftalık Menü</a>
+      <a href="/reservations.html" style="text-decoration:underline;">Rezervasyonlarım</a>
+      <a href="/balance.html">Bakiye</a>
+    </nav>
+  </header>
+
+  <main class="kapsayici">
+    <h1>Rezervasyonlarım</h1>
+    <p class="alt" style="color:var(--metin-soluk);">Mevcut ve geçmiş yemek rezervasyonlarınızı görüntüleyin, süresi dolmamış rezervasyonları iptal edin.</p>
+
+    <div id="bildirim-alani" class="bildirim bildirim-gizli" style="margin-bottom:1.5rem;"></div>
+
+    <div class="kart tablo-kaydir">
+      <table class="tablo">
+        <thead>
+          <tr>
+            <th>Rez No</th>
+            <th>Tarih & Yemekhane</th>
+            <th>Öğün</th>
+            <th>Ücret</th>
+            <th>Durum</th>
+            <th>Son İptal Saati</th>
+            <th>İşlem</th>
+          </tr>
+        </thead>
+        <tbody id="rezervasyon-tablo-govde">
+          <tr><td colspan="7" style="text-align:center;">Rezervasyonlar yükleniyor…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <script src="/js/api.js"></script>
+  <script>
+    async function rezervasyonlariYukle() {
+      const user = API.getUser();
+      if (!user) {
+        alert('Rezervasyonlarınızı görmek için lütfen önce giriş yapın.');
+        window.location.href = '/index.html';
+        return;
+      }
+
+      const govde = document.getElementById('rezervasyon-tablo-govde');
+      const bildirim = document.getElementById('bildirim-alani');
+
+      try {
+        const liste = await API.getMyReservations();
+        if (!liste || liste.length === 0) {
+          govde.innerHTML = '<tr><td colspan="7" style="text-align:center; color:var(--metin-soluk);">Henüz bir rezervasyonunuz bulunmuyor.</td></tr>';
+          return;
+        }
+
+        govde.innerHTML = '';
+        liste.forEach(r => {
+          const tr = document.createElement('tr');
+
+          const isAktif = (r.durum === 'aktif');
+          const durumRozeti = isAktif
+            ? `<span class="durum-rozet durum-aktif">Aktif</span>`
+            : `<span class="durum-rozet durum-iptal">İptal Edildi</span>`;
+
+          let islemHtml = '';
+          if (isAktif) {
+            if (r.can_cancel) {
+              islemHtml = `<button class="iptal-btn" onclick="iptalEt(${r.id})">İptal Et</button>`;
+            } else {
+              islemHtml = `<button class="iptal-btn" disabled title="Son iptal saati geçmiştir">Süresi Doldu</button>`;
+            }
+          } else {
+            islemHtml = `<span style="color:var(--metin-soluk); font-size:0.85rem;">İade Yapıldı</span>`;
+          }
+
+          tr.innerHTML = `
+            <td><strong>#${r.id}</strong></td>
+            <td>
+              <strong>${r.tarih}</strong><br>
+              <span style="color:var(--metin-soluk); font-size:0.85rem;">${r.yemekhane}</span>
+            </td>
+            <td><strong>${r.ogun}</strong></td>
+            <td><strong>${Number(r.ucret).toFixed(2)} TL</strong></td>
+            <td>${durumRozeti}</td>
+            <td style="font-size:0.85rem; color:var(--metin-soluk);">${r.son_iptal_saati || '-'}</td>
+            <td>${islemHtml}</td>
+          `;
+          govde.appendChild(tr);
+        });
+      } catch (err) {
+        govde.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--hata);">${err.message}</td></tr>`;
+      }
+    }
+
+    async function iptalEt(rezervasyonId) {
+      if (!confirm(`#${rezervasyonId} numaralı rezervasyonunuzu iptal etmek ve ücreti bakiyenize iade almak istiyor musunuz?`)) {
+        return;
+      }
+
+      const bildirim = document.getElementById('bildirim-alani');
+      bildirim.classList.add('bildirim-gizli');
+
+      try {
+        const res = await API.cancelReservation(rezervasyonId);
+        bildirim.className = 'bildirim bildirim-basari';
+        bildirim.textContent = `Rezervasyon #${rezervasyonId} başarıyla iptal edildi! İade edilen tutar: ${Number(res.iade).toFixed(2)} TL, Güncel Bakiye: ${Number(res.yeni_bakiye).toFixed(2)} TL.`;
+        bildirim.classList.remove('bildirim-gizli');
+
+        await rezervasyonlariYukle();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } catch (err) {
+        bildirim.className = 'bildirim bildirim-hata';
+        bildirim.textContent = err.message || 'İptal işlemi sırasında hata oluştu.';
+        bildirim.classList.remove('bildirim-gizli');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+
+    rezervasyonlariYukle();
+  </script>
+</body>
+</html>

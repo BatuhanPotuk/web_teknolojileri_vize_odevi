@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Haftalık Menü & Rezervasyon · Yemekhane Otomasyonu</title>
+  <link rel="stylesheet" href="/css/temel.css">
+  <style>
+    .nav-bar {
+      background: var(--ana-koyu);
+      color: #fff;
+      padding: 0.75rem 1rem;
+      margin-bottom: 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .nav-links a {
+      color: #fff;
+      text-decoration: none;
+      margin-left: 1rem;
+      font-weight: 500;
+      font-size: var(--boyut-kucuk);
+    }
+    .nav-links a:hover { text-decoration: underline; }
+    .kart {
+      background: var(--yuzey);
+      padding: 1.5rem;
+      border-radius: var(--kose);
+      border: 1px solid var(--cizgi);
+      margin-bottom: 1.5rem;
+    }
+    .kullanici-bilgi-cubugu {
+      background: #E8F0FE;
+      border: 1px solid #B8D5FA;
+      padding: 0.75rem 1rem;
+      border-radius: var(--kose);
+      margin-bottom: 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      font-size: var(--boyut-kucuk);
+    }
+    .filtre-alani {
+      display: flex;
+      gap: 1rem;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      margin-bottom: 1.5rem;
+    }
+    .tablo {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.95rem;
+    }
+    .tablo th, .tablo td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--cizgi);
+      vertical-align: middle;
+    }
+    .tablo th {
+      background: var(--zemin);
+      font-weight: 600;
+    }
+    .tablo tr:hover {
+      background: #FAFAF8;
+    }
+    .fiyat-etiket {
+      font-weight: bold;
+      color: var(--ana-koyu);
+      font-size: 1.05rem;
+    }
+    .kontenjan-rozet {
+      background: #E0F2F1;
+      color: #004D40;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    .durum-pasif {
+      color: var(--metin-soluk);
+      font-size: 0.8rem;
+      font-style: italic;
+    }
+    .bildirim-gizli { display: none; }
+  </style>
+</head>
+<body>
+  <header class="nav-bar">
+    <div style="font-weight:bold; font-size:1.1rem;">🍽️ Yemekhane Otomasyonu</div>
+    <nav class="nav-links">
+      <a href="/index.html">Profil / Giriş</a>
+      <a href="/menu.html">Günün Menüsü</a>
+      <a href="/week.html" style="text-decoration:underline;">Haftalık Menü</a>
+      <a href="/reservations.html">Rezervasyonlarım</a>
+      <a href="/balance.html">Bakiye</a>
+      <a href="/review.html">Değerlendirme</a>
+    </nav>
+  </header>
+
+  <main class="kapsayici">
+    <h1>Haftalık Menü & Rezervasyon</h1>
+    <p class="alt" style="color:var(--metin-soluk);">Haftalık yemek takvimini inceleyin, kontenjan durumuna göre rezervasyon yapın.</p>
+
+    <div id="kullanici-cubuk" class="kullanici-bilgi-cubugu">
+      <div>
+        <strong>Aktif Oturum:</strong> <span id="span-kullanici-ad">Giriş Yapılmadı (Öğrenci Tarifesi)</span> 
+        (<span id="span-kullanici-rol">Misafir</span>)
+      </div>
+      <div>
+        <strong>Bakiye:</strong> <span id="span-kullanici-bakiye">-</span> TL
+      </div>
+    </div>
+
+    <!-- FİLTRE -->
+    <div class="kart">
+      <div class="filtre-alani">
+        <div style="flex:1; min-width:200px;">
+          <label for="sel-yemekhane">Yemekhane Seçin</label>
+          <select id="sel-yemekhane" onchange="haftayiYukle()">
+            <option value="1">Merkez Yemekhane</option>
+            <option value="2">Mühendislik Yemekhanesi</option>
+          </select>
+        </div>
+        <div style="flex:1; min-width:200px;">
+          <label for="inp-baslangic">Hafta Başlangıcı</label>
+          <input type="date" id="inp-baslangic" onchange="haftayiYukle()">
+        </div>
+      </div>
+    </div>
+
+    <div id="bildirim-alani" class="bildirim bildirim-gizli" style="margin-bottom:1rem;"></div>
+
+    <!-- TABLO -->
+    <div class="kart tablo-kaydir">
+      <table class="tablo">
+        <thead>
+          <tr>
+            <th>Tarih & Gün</th>
+            <th>Öğün</th>
+            <th>Kalan Kontenjan</th>
+            <th>Fiyat</th>
+            <th>Son Rezervasyon Saati</th>
+            <th>İşlem</th>
+          </tr>
+        </thead>
+        <tbody id="menu-tablo-govde">
+          <tr><td colspan="6" style="text-align:center;">Menüler yükleniyor…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <script src="/js/api.js"></script>
+  <script>
+    // Başlangıç tarihi olarak bugün
+    const bugun = new Date().toISOString().split('T')[0];
+    document.getElementById('inp-baslangic').value = bugun;
+
+    function kullaniciBilgisiniGuncelle() {
+      const user = API.getUser();
+      if (user) {
+        document.getElementById('span-kullanici-ad').textContent = user.ad + ' ' + user.soyad;
+        document.getElementById('span-kullanici-rol').textContent = user.rol.toUpperCase();
+        document.getElementById('span-kullanici-bakiye').textContent = Number(user.bakiye).toFixed(2);
+      } else {
+        document.getElementById('span-kullanici-ad').textContent = 'Misafir';
+        document.getElementById('span-kullanici-rol').textContent = 'ÖĞRENCİ (Varsayılan)';
+        document.getElementById('span-kullanici-bakiye').textContent = '0.00';
+      }
+    }
+
+    async function yemekhaneleriYukle() {
+      try {
+        const yhs = await API.getCafeterias();
+        const sel = document.getElementById('sel-yemekhane');
+        sel.innerHTML = '';
+        yhs.forEach(y => {
+          const opt = document.createElement('option');
+          opt.value = y.id;
+          opt.textContent = `${y.ad} (Kapasite: ${y.kapasite})`;
+          sel.appendChild(opt);
+        });
+      } catch (e) {
+        console.warn('Yemekhaneler API hatası:', e);
+      }
+    }
+
+    async function haftayiYukle() {
+      const yhId = document.getElementById('sel-yemekhane').value;
+      const baslangic = document.getElementById('inp-baslangic').value;
+      const govde = document.getElementById('menu-tablo-govde');
+      const bildirim = document.getElementById('bildirim-alani');
+      bildirim.classList.add('bildirim-gizli');
+
+      govde.innerHTML = '<tr><td colspan="6" style="text-align:center;">Yükleniyor…</td></tr>';
+
+      try {
+        const menuler = await API.getWeekMenu(yhId, baslangic);
+        if (!menuler || menuler.length === 0) {
+          govde.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--metin-soluk);">Bu aralıkta menü bulunamadı.</td></tr>';
+          return;
+        }
+
+        govde.innerHTML = '';
+        menuler.forEach(m => {
+          const tr = document.createElement('tr');
+
+          // can_reserve kontrolü
+          let butonHtml = '';
+          if (m.can_reserve) {
+            butonHtml = `<button class="dugme" onclick="rezervasyonYap(${m.menu_id})">Rezervasyon Yap</button>`;
+          } else {
+            butonHtml = `<button class="dugme" disabled title="Rezervasyon süresi dolmuştur">Süresi Doldu</button>
+                         <br><span class="durum-pasif">Rezervasyon kapandı</span>`;
+          }
+
+          tr.innerHTML = `
+            <td>
+              <strong>${m.tarih}</strong><br>
+              <span style="color:var(--metin-soluk); font-size:0.85rem;">${m.gun_adi}</span>
+            </td>
+            <td><strong>${m.ogun}</strong></td>
+            <td>
+              <span class="kontenjan-rozet">${m.kalan_yer} / ${m.kapasite} Boş Yer</span>
+            </td>
+            <td>
+              <span class="fiyat-etiket">${Number(m.fiyat).toFixed(2)} TL</span>
+              <br><small style="color:var(--metin-soluk);">(Öğr: ${Number(m.ogrenci_fiyati).toFixed(0)}₺ / Pers: ${Number(m.personel_fiyati).toFixed(0)}₺)</small>
+            </td>
+            <td>${m.rezervasyon_son}</td>
+            <td>${butonHtml}</td>
+          `;
+          govde.appendChild(tr);
+        });
+      } catch (err) {
+        govde.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--hata);">${err.message}</td></tr>`;
+      }
+    }
+
+    async function rezervasyonYap(menuId) {
+      const user = API.getUser();
+      if (!user) {
+        alert('Rezervasyon yapabilmek için lütfen önce giriş yapın.');
+        window.location.href = '/index.html';
+        return;
+      }
+
+      const bildirim = document.getElementById('bildirim-alani');
+      bildirim.classList.add('bildirim-gizli');
+
+      try {
+        const res = await API.makeReservation(menuId);
+        bildirim.className = 'bildirim bildirim-basari';
+        bildirim.textContent = `Rezervasyon başarıyla yapıldı! Ücret: ${res.ucret} TL, Yeni Bakiye: ${res.yeni_bakiye} TL (Rezervasyon No: #${res.rezervasyon_id})`;
+        bildirim.classList.remove('bildirim-gizli');
+
+        // Bakiye çubuğunu güncelle
+        kullaniciBilgisiniGuncelle();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } catch (err) {
+        bildirim.className = 'bildirim bildirim-hata';
+        bildirim.textContent = err.message || 'Rezervasyon işlemi başarısız oldu.';
+        bildirim.classList.remove('bildirim-gizli');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+
+    (async function init() {
+      kullaniciBilgisiniGuncelle();
+      await yemekhaneleriYukle();
+      await haftayiYukle();
+    })();
+  </script>
+</body>
+</html>
