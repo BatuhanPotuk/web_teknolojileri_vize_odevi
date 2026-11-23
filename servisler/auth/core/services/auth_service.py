@@ -36,8 +36,9 @@ class AuthService:
             "bakiye": float(kullanici.bakiye)
         }
 
-        # Redis'te sakla (24 saat TTL)
-        OturumRepository.oturum_olustur(token, oturum_verisi, ttl=86400)
+        # Redis'te sakla (30 dakika = 1800 sn TTL)
+        OturumRepository.oturum_olustur(token, oturum_verisi, ttl=1800)
+        print(f"[AUTH REDIS] Yeni oturum oluşturuldu (TTL: 1800s): oturum:{token}", flush=True)
 
         return {
             "token": token,
@@ -48,9 +49,16 @@ class AuthService:
     def cikis_yap(token: str):
         if token:
             OturumRepository.oturum_sil(token)
+            print(f"[AUTH REDIS] Çıkış yapıldı, oturum silindi: oturum:{token}", flush=True)
 
     @staticmethod
     def dogrula(token: str) -> dict:
         if not token:
             return None
-        return OturumRepository.oturum_getir(token)
+        oturum = OturumRepository.oturum_getir(token)
+        if oturum:
+            # Her istekte süreyi 30 dakika yenile (sliding expiration)
+            OturumRepository.oturum_sure_uzat(token, ttl=1800)
+            print(f"[AUTH REDIS] Oturum doğrulandı ve 1800s yenilendi: oturum:{token[:10]}...", flush=True)
+        return oturum
+

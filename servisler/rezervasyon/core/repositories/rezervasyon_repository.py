@@ -102,3 +102,43 @@ class RezervasyonRepository:
                 "dolu": dolu,
                 "kalan": max(0, kapasite - dolu)
             }
+
+    @staticmethod
+    def admin_rezervasyonlar(tarih: str = None, durum: str = None, rol: str = None, limit: int = 150):
+        with connections['default'].cursor() as cursor:
+            where_clauses = []
+            params = []
+            if tarih:
+                where_clauses.append("m.tarih = %s")
+                params.append(tarih)
+            if durum:
+                where_clauses.append("r.durum = %s")
+                params.append(durum)
+            if rol:
+                where_clauses.append("k.rol = %s")
+                params.append(rol)
+            
+            where_sql = ("WHERE " + " AND ".join(where_clauses)) if where_clauses else ""
+            sql = f"""
+                SELECT r.id, r.kullanici_id, CONCAT(k.ad, ' ', k.soyad) AS ad_soyad,
+                       k.eposta, k.ogrenci_no, k.rol,
+                       r.menu_id, r.durum, r.ucret, r.olusturma, r.iptal_zamani,
+                       m.tarih, yh.ad AS yemekhane, o.ad AS ogun
+                  FROM rezervasyonlar r
+                  JOIN kullanicilar k ON k.id = r.kullanici_id
+                  JOIN menuler m ON m.id = r.menu_id
+                  JOIN yemekhaneler yh ON yh.id = m.yemekhane_id
+                  JOIN ogunler o ON o.id = m.ogun_id
+                 {where_sql}
+                 ORDER BY r.id DESC
+                 LIMIT {limit}
+            """
+            cursor.execute(sql, params)
+            return cursor.fetchall()
+
+    @staticmethod
+    def rezervasyon_kullanici_id(rezervasyon_id: int):
+        with connections['default'].cursor() as cursor:
+            cursor.execute("SELECT kullanici_id FROM rezervasyonlar WHERE id = %s", [rezervasyon_id])
+            row = cursor.fetchone()
+            return row[0] if row else None

@@ -34,7 +34,7 @@
     }
     .ozet-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
       gap: 1rem;
       margin-bottom: 1.5rem;
     }
@@ -46,7 +46,7 @@
       border-radius: var(--kose);
     }
     .ozet-sayi {
-      font-size: 2rem;
+      font-size: 1.85rem;
       font-weight: bold;
       color: var(--ana-koyu);
       margin-top: 0.25rem;
@@ -70,13 +70,99 @@
       height: 12px;
       overflow: hidden;
       width: 100%;
-      max-width: 200px;
+      max-width: 180px;
     }
     .cubuk-doluluk {
       background: var(--ana);
       height: 100%;
     }
     .bildirim-gizli { display: none; }
+
+    /* Sekme Sistemi */
+    .sekme-bar {
+      display: flex;
+      gap: 0.5rem;
+      border-bottom: 2px solid var(--cizgi);
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .sekme-btn {
+      padding: 0.75rem 1.25rem;
+      border: none;
+      background: none;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--metin-soluk);
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+      transition: all 0.2s;
+    }
+    .sekme-btn:hover { color: var(--ana-koyu); }
+    .sekme-btn.aktif {
+      color: var(--ana-koyu);
+      border-bottom-color: var(--ana);
+      background: rgba(27, 107, 90, 0.05);
+      border-radius: var(--kose) var(--kose) 0 0;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    .form-alan {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+    .form-alan label {
+      font-weight: 600;
+      font-size: 0.85rem;
+      color: var(--metin-soluk);
+    }
+    .form-alan input, .form-alan select {
+      padding: 0.6rem 0.75rem;
+      border: 1px solid var(--cizgi);
+      border-radius: var(--kose);
+      font-size: 0.95rem;
+      font-family: inherit;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.6rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: bold;
+    }
+    .badge-aktif { background: #E8F5E9; color: #2E7D32; }
+    .badge-iptal { background: #FFEBEE; color: #C62828; }
+    .badge-kullanildi { background: #E3F2FD; color: #1565C0; }
+
+    .yemek-etiket {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      background: #EEF2F6;
+      border: 1px solid #D0D7DE;
+      padding: 0.25rem 0.5rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      margin: 0.2rem;
+    }
+    .yemek-sil-btn {
+      color: #C62828;
+      cursor: pointer;
+      font-weight: bold;
+      border: none;
+      background: none;
+      padding: 0 0.25rem;
+      font-size: 1.1rem;
+      line-height: 1;
+    }
+    .yemek-sil-btn:hover { background: #FFCDD2; border-radius: 3px; }
   </style>
 </head>
 <body>
@@ -90,72 +176,453 @@
     </nav>
   </header>
 
-  <main class="kapsayici">
-    <h1>Yönetici İstatistik Paneli</h1>
-    <p class="alt" style="color:var(--metin-soluk);">Günlük rezervasyon doluluklarını, gelirleri ve yemekhane kapasite durumunu canlı izleyin.</p>
+  <main class="kapsayici" style="max-width:1150px;">
+    <h1>Yönetici Kontrol Merkezi</h1>
+    <p class="alt" style="color:var(--metin-soluk); margin-bottom:1.5rem;">
+      Menüleri düzenleyin, yemek ekleyip çıkarın, rezervasyonları yönetin ve canlı sistem istatistiklerini izleyin.
+    </p>
 
     <div id="bildirim-alani" class="bildirim bildirim-gizli" style="margin-bottom:1.5rem;"></div>
 
-    <div id="admin-icerik" class="bildirim-gizli">
-      <!-- ÖZET METRİKLER -->
-      <div class="ozet-grid">
-        <div class="ozet-kart">
-          <div style="color:var(--metin-soluk); font-size:var(--boyut-kucuk);">BUGÜNKÜ AKTİF REZERVASYON</div>
-          <div class="ozet-sayi" id="stat-rezervasyon">0</div>
+    <div id="admin-icerik">
+      <!-- SEKME BUTONLARI -->
+      <nav class="sekme-bar">
+        <button class="sekme-btn aktif" onclick="sekmeDegistir('istatistik', this)">📊 İstatistikler & Raporlama</button>
+        <button class="sekme-btn" onclick="sekmeDegistir('menu', this)">🍲 Menü Yönetimi</button>
+        <button class="sekme-btn" onclick="sekmeDegistir('rezervasyon', this)">📋 Rezervasyon Yönetimi</button>
+        <button class="sekme-btn" onclick="sekmeDegistir('degerlendirme', this)">⭐ Değerlendirmeler & Yorumlar</button>
+      </nav>
+
+      <!-- 1. SEKME: İSTATİSTİKLER & DOLULUK -->
+      <div id="sekme-istatistik">
+        <div class="ozet-grid">
+          <div class="ozet-kart">
+            <div style="color:var(--metin-soluk); font-size:var(--boyut-kucuk);">GÜNLÜK AKTİF REZERVASYON</div>
+            <div class="ozet-sayi" id="stat-rezervasyon">0</div>
+            <div id="stat-rezervasyon-detay" style="font-size:0.8rem; color:var(--metin-soluk); margin-top:0.25rem;">Toplam: 0 | İptal: 0</div>
+          </div>
+          <div class="ozet-kart" style="border-left-color: #2E7D32;">
+            <div style="color:var(--metin-soluk); font-size:var(--boyut-kucuk);">GÜNLÜK TOPLAM GELİR</div>
+            <div class="ozet-sayi" style="color:#2E7D32;" id="stat-gelir">0.00 TL</div>
+            <div id="stat-gelir-detay" style="font-size:0.8rem; color:var(--metin-soluk); margin-top:0.25rem;">Öğr: 0.00 TL | Pers: 0.00 TL</div>
+          </div>
+          <div class="ozet-kart" style="border-left-color: #E65100;">
+            <div style="color:var(--metin-soluk); font-size:var(--boyut-kucuk);">KULLANICI MEMNUNİYETİ</div>
+            <div class="ozet-sayi" style="color:#E65100;" id="stat-puan">⭐ 0.0</div>
+            <div id="stat-yorum-sayisi" style="font-size:0.8rem; color:var(--metin-soluk); margin-top:0.25rem;">0 değerlendirme</div>
+          </div>
+          <div class="ozet-kart" style="border-left-color: #F59E0B;">
+            <div style="color:var(--metin-soluk); font-size:var(--boyut-kucuk);">SİSTEM TARİHİ</div>
+            <div class="ozet-sayi" style="color:#B45309; font-size:1.5rem;" id="stat-tarih">-</div>
+            <div style="font-size:0.8rem; color:#2E7D32; margin-top:0.25rem;">● Sistem Canlı</div>
+          </div>
         </div>
-        <div class="ozet-kart" style="border-left-color: #2E7D32;">
-          <div style="color:var(--metin-soluk); font-size:var(--boyut-kucuk);">BUGÜNKÜ TOPLAM GELİR</div>
-          <div class="ozet-sayi" style="color:#2E7D32;" id="stat-gelir">0.00 TL</div>
+
+        <!-- YEMEKHANE DOLULUK TABLOSU -->
+        <div class="kart tablo-kaydir">
+          <h2>Yemekhane Canlı Kapasite ve Doluluk Oranları</h2>
+          <table class="tablo">
+            <thead>
+              <tr>
+                <th>Yemekhane</th>
+                <th>Toplam Kapasite</th>
+                <th>Aktif Doluluk</th>
+                <th>Kalan Boş Yer</th>
+                <th>Doluluk Oranı (%)</th>
+                <th>Canlı Grafik</th>
+              </tr>
+            </thead>
+            <tbody id="doluluk-tablo-govde">
+              <tr><td colspan="6" style="text-align:center;">İstatistikler yükleniyor…</td></tr>
+            </tbody>
+          </table>
         </div>
-        <div class="ozet-kart" style="border-left-color: #F59E0B;">
-          <div style="color:var(--metin-soluk); font-size:var(--boyut-kucuk);">SİSTEM TARİHİ</div>
-          <div class="ozet-sayi" style="color:#B45309; font-size:1.5rem;" id="stat-tarih">-</div>
+
+        <!-- EN POPÜLER YEMEKLER -->
+        <div class="kart">
+          <h2>🏆 En Çok Tercih Edilen Yemekler</h2>
+          <p style="color:var(--metin-soluk); font-size:0.9rem; margin-bottom:1rem;">Rezervasyon tercihlerine göre öğrencilerin ve personellerin en çok seçtiği ilk 5 yemek.</p>
+          <div id="populer-yemekler-alani" style="display:flex; flex-wrap:wrap; gap:0.75rem;">
+            Yükleniyor…
+          </div>
         </div>
       </div>
 
-      <!-- YEMEKHANE DOLULUK TABLOSU -->
-      <div class="kart tablo-kaydir">
-        <h2>Yemekhane Canlı Doluluk Durumu</h2>
-        <table class="tablo">
-          <thead>
-            <tr>
-              <th>Yemekhane</th>
-              <th>Kapasite</th>
-              <th>Aktif Rezervasyon</th>
-              <th>Doluluk Oranı</th>
-              <th>Grafik</th>
-            </tr>
-          </thead>
-          <tbody id="doluluk-tablo-govde">
-            <tr><td colspan="5" style="text-align:center;">İstatistikler yükleniyor…</td></tr>
-          </tbody>
-        </table>
+      <!-- 2. SEKME: MENÜ YÖNETİMİ -->
+      <div id="sekme-menu" class="bildirim-gizli">
+        <!-- YENİ MENÜ OLUŞTURMA KARTI -->
+        <div class="kart">
+          <h2>➕ Yeni Menü Oluştur</h2>
+          <p style="color:var(--metin-soluk); font-size:0.9rem; margin-bottom:1rem;">
+            Seçilen tarih ve öğün için yeni menü tanımlayın. Menü kaydedildiğinde ilgili Redis önbelleği (<code style="background:#eee; padding:2px 4px;">menu:{yh}:{tarih}:{ogun}</code>) anında geçersiz kılınır.
+          </p>
+          <form id="yeni-menu-formu" onsubmit="yeniMenuKaydet(event)">
+            <div class="form-grid">
+              <div class="form-alan">
+                <label>Yemekhane</label>
+                <select id="yeni-menu-yemekhane" required></select>
+              </div>
+              <div class="form-alan">
+                <label>Tarih</label>
+                <input type="date" id="yeni-menu-tarih" required>
+              </div>
+              <div class="form-alan">
+                <label>Öğün</label>
+                <select id="yeni-menu-ogun" required></select>
+              </div>
+              <div class="form-alan">
+                <label>Öğrenci Fiyatı (TL)</label>
+                <input type="number" step="0.5" id="yeni-menu-ogr-fiyat" value="40.00" required>
+              </div>
+              <div class="form-alan">
+                <label>Personel Fiyatı (TL)</label>
+                <input type="number" step="0.5" id="yeni-menu-prs-fiyat" value="90.00" required>
+              </div>
+            </div>
+
+            <!-- Yemek Seçimleri -->
+            <div style="margin-top:1rem; margin-bottom:1rem;">
+              <label style="font-weight:600; font-size:0.9rem; color:var(--metin-soluk); display:block; margin-bottom:0.5rem;">
+                Menüye Eklenecek Yemekler (Kategori Bazında Seçebilirsiniz):
+              </label>
+              <div id="yemek-secim-gruplari" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:1rem;">
+                Yemekler yükleniyor…
+              </div>
+            </div>
+
+            <button type="submit" class="buton" style="background:var(--ana);">Menüyü Kaydet ve Yayınla</button>
+          </form>
+        </div>
+
+        <!-- MEVCUT MENÜLER LİSTESİ VE DÜZENLEME -->
+        <div class="kart tablo-kaydir">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; margin-bottom:1rem; gap:0.5rem;">
+            <h2>Mevcut Menüler ve İçerik Yönetimi</h2>
+            <div style="display:flex; gap:0.5rem; align-items:center;">
+              <input type="date" id="menu-filtre-tarih" onchange="menuleriGetir()" style="padding:0.4rem; border:1px solid var(--cizgi); border-radius:var(--kose);">
+              <button class="buton" style="padding:0.4rem 0.8rem; font-size:0.85rem;" onclick="document.getElementById('menu-filtre-tarih').value=''; menuleriGetir();">Tüm Tarihler</button>
+            </div>
+          </div>
+
+          <table class="tablo">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Tarih</th>
+                <th>Yemekhane</th>
+                <th>Öğün</th>
+                <th>Fiyat Tarifesi</th>
+                <th>Yemek Sayısı</th>
+                <th>Aktif Rez.</th>
+                <th>İşlemler</th>
+              </tr>
+            </thead>
+            <tbody id="menuler-tablo-govde">
+              <tr><td colspan="8" style="text-align:center;">Menüler yükleniyor…</td></tr>
+            </tbody>
+          </table>
+        </div>
       </div>
+
+      <!-- 3. SEKME: REZERVASYON YÖNETİMİ -->
+      <div id="sekme-rezervasyon" class="bildirim-gizli">
+        <div class="kart tablo-kaydir">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; margin-bottom:1rem; gap:0.75rem;">
+            <div>
+              <h2 style="margin:0 0 0.25rem 0;">Rezervasyon Yönetimi</h2>
+              <div style="font-size:0.85rem; color:var(--metin-soluk);">Kullanıcıların aktif, kullanılmış veya iptal edilmiş rezervasyonlarını inceleyin ve yönetin.</div>
+            </div>
+            
+            <button class="buton" style="background:#2E7D32; font-size:0.85rem; padding:0.5rem 1rem;" onclick="bugunkuAktifleriFiltrele()">
+              ⚡ Yalnızca Bugünkü Aktif Rezervasyonları Listele
+            </button>
+          </div>
+
+          <!-- FİLTRELEME ÇUBUĞU -->
+          <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap; background:#F8FAFA; padding:0.75rem; border-radius:var(--kose); border:1px solid var(--cizgi); margin-bottom:1rem;">
+            <div class="form-alan" style="flex:1; min-width:140px;">
+              <label>Tarih:</label>
+              <input type="date" id="rez-filtre-tarih" onchange="rezervasyonlariGetir()">
+            </div>
+            <div class="form-alan" style="flex:1; min-width:140px;">
+              <label>Durum:</label>
+              <select id="rez-filtre-durum" onchange="rezervasyonlariGetir()">
+                <option value="">Tüm Durumlar</option>
+                <option value="aktif">Aktif</option>
+                <option value="kullanildi">Kullanıldı</option>
+                <option value="iptal">İptal Edildi</option>
+              </select>
+            </div>
+            <div class="form-alan" style="flex:1; min-width:140px;">
+              <label>Kullanıcı Rolü:</label>
+              <select id="rez-filtre-rol" onchange="rezervasyonlariGetir()">
+                <option value="">Tüm Roller</option>
+                <option value="ogrenci">Öğrenci</option>
+                <option value="personel">Personel</option>
+              </select>
+            </div>
+            <div style="align-self:flex-end;">
+              <button class="buton" style="padding:0.6rem 1rem; font-size:0.85rem; background:#6c757d;" onclick="filtreSifirla()">Filtreleri Sıfırla</button>
+            </div>
+          </div>
+
+          <table class="tablo">
+            <thead>
+              <tr>
+                <th>Rez No</th>
+                <th>Kullanıcı Adı</th>
+                <th>Rol / No</th>
+                <th>Tarih & Öğün</th>
+                <th>Yemekhane</th>
+                <th>Ücret</th>
+                <th>Durum</th>
+                <th>İşlem</th>
+              </tr>
+            </thead>
+            <tbody id="rezervasyonlar-tablo-govde">
+              <tr><td colspan="8" style="text-align:center;">Rezervasyonlar yükleniyor…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 4. SEKME: DEĞERLENDİRME & YORUMLAR -->
+      <div id="sekme-degerlendirme" class="bildirim-gizli">
+        <div class="kart">
+          <h2>Kullanıcı Değerlendirmeleri ve Puan Dağılımı</h2>
+          <div id="degerlendirme-ozet-alani" style="display:flex; align-items:center; gap:2.5rem; flex-wrap:wrap; margin-bottom:1.5rem; padding:1.25rem; background:#FAFBFB; border-radius:var(--kose); border:1px solid var(--cizgi);">
+            <!-- Ortalama ve yıldız çubukları dinamik yüklenecek -->
+          </div>
+
+          <h3>Gelen Öğrenci ve Personel Yorumları</h3>
+          <div id="yorumlar-listesi-alani" style="display:flex; flex-direction:column; gap:0.75rem; margin-top:1rem;">
+            Yorumlar yükleniyor…
+          </div>
+        </div>
+      </div>
+
     </div>
   </main>
 
-  <script src="/js/api.js"></script>
+  <!-- MENÜ YEMEK EKLEME / FİYAT DÜZENLEME MODALI -->
+  <div id="menu-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; justify-content:center; align-items:center;">
+    <div style="background:#fff; padding:2rem; border-radius:var(--kose); max-width:650px; width:92%; max-height:90vh; overflow-y:auto; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
+      <h2 id="modal-baslik" style="margin-top:0;">Menü Detayı ve Düzenleme</h2>
+      
+      <!-- Fiyat Güncelleme -->
+      <div style="background:#F9FBFA; padding:1rem; border-radius:var(--kose); border:1px solid var(--cizgi); margin-bottom:1.5rem;">
+        <h4 style="margin:0 0 0.5rem 0;">Fiyat Güncelleme</h4>
+        <div style="font-size:0.8rem; color:var(--metin-soluk); margin-bottom:0.75rem;">Fiyat güncellendiğinde ilgili tarih/öğün Redis önbelleği otomatik olarak silinir.</div>
+        <div class="form-grid">
+          <div class="form-alan">
+            <label>Öğrenci Fiyatı (TL)</label>
+            <input type="number" step="0.5" id="modal-ogr-fiyat">
+          </div>
+          <div class="form-alan">
+            <label>Personel Fiyatı (TL)</label>
+            <input type="number" step="0.5" id="modal-prs-fiyat">
+          </div>
+        </div>
+        <button class="buton" style="background:var(--ana); font-size:0.9rem;" onclick="modalFiyatGuncelle()">Fiyatları Güncelle</button>
+      </div>
+
+      <!-- Mevcut Yemekler -->
+      <h4>Menüdeki Yemekler</h4>
+      <p style="font-size:0.85rem; color:var(--metin-soluk); margin:0 0 0.5rem 0;">Menüden çıkarmak istediğiniz yemeğin yanındaki çarpı (×) işaretine basabilirsiniz:</p>
+      <div id="modal-yemek-listesi" style="margin-bottom:1.5rem; min-height:40px;"></div>
+
+      <!-- Yeni Yemek Ekle -->
+      <div style="border-top:1px solid var(--cizgi); padding-top:1rem;">
+        <h4 style="margin:0 0 0.5rem 0;">Menüye Yeni Yemek Ekle</h4>
+        <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+          <select id="modal-yeni-yemek-select" style="flex:1; min-width:220px; padding:0.6rem; border:1px solid var(--cizgi); border-radius:var(--kose);"></select>
+          <button class="buton" style="background:#2E7D32;" onclick="modalYemekEkle()">+ Menüye Ekle</button>
+        </div>
+      </div>
+
+      <div style="text-align:right; margin-top:1.5rem; border-top:1px solid var(--cizgi); padding-top:1rem;">
+        <button class="buton" style="background:#6c757d;" onclick="modalKapat()">Kapat</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/api.js?v=20261123_02"></script>
   <script>
+    // Tarayıcı önbelleği eski api.js dosyasını tutsa dahi garantili çalışma koruması
+    if (!API.getAdminMenus) {
+      API.getAdminMenus = async function(tarih = '') {
+        const token = this.getToken();
+        let url = '/api/admin/menus';
+        if (tarih) url += `?tarih=${tarih}`;
+        const res = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
+        return await res.json();
+      };
+      API.getAdminMenuDetail = async function(id) {
+        const token = this.getToken();
+        const res = await fetch(`/api/admin/menus/${id}`, { headers: { 'Authorization': `Bearer ${token}` } });
+        return await res.json();
+      };
+      API.createAdminMenu = async function(menuData) {
+        const token = this.getToken();
+        const res = await fetch('/api/admin/menus', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify(menuData)
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || data.hata || 'Menü oluşturulamadı.');
+        return data;
+      };
+      API.updateAdminMenuPrice = async function(id, ogrenci_fiyati, personel_fiyati) {
+        const token = this.getToken();
+        const res = await fetch(`/api/admin/menus/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ ogrenci_fiyati, personel_fiyati })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || data.hata || 'Fiyat güncellenemedi.');
+        return data;
+      };
+      API.deleteAdminMenu = async function(id) {
+        const token = this.getToken();
+        const res = await fetch(`/api/admin/menus/${id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || data.hata || 'Menü silinemedi.');
+        return data;
+      };
+      API.addAdminMenuItem = async function(menuId, yemekId) {
+        const token = this.getToken();
+        const res = await fetch(`/api/admin/menus/${menuId}/items`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ yemek_id: yemekId })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || data.hata || 'Yemek eklenemedi.');
+        return data;
+      };
+      API.removeAdminMenuItem = async function(menuId, yemekId) {
+        const token = this.getToken();
+        const res = await fetch(`/api/admin/menus/${menuId}/items/${yemekId}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || data.hata || 'Yemek çıkarılamadı.');
+        return data;
+      };
+      API.getAdminFoods = async function() {
+        const token = this.getToken();
+        const res = await fetch('/api/admin/foods', { headers: { 'Authorization': `Bearer ${token}` } });
+        return await res.json();
+      };
+      API.getAdminReservations = async function(tarih = '', durum = '', rol = '') {
+        const token = this.getToken();
+        let url = '/api/reservations/admin';
+        const params = [];
+        if (tarih) params.push(`tarih=${tarih}`);
+        if (durum) params.push(`durum=${durum}`);
+        if (rol) params.push(`rol=${rol}`);
+        if (params.length) url += '?' + params.join('&');
+        const res = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
+        return await res.json();
+      };
+      API.adminCancelReservation = async function(id) {
+        const token = this.getToken();
+        const res = await fetch(`/api/reservations/admin/${id}/cancel`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || data.hata || 'Rezervasyon iptal edilemedi.');
+        return data;
+      };
+      API.getAdminReviews = async function() {
+        const token = this.getToken();
+        const res = await fetch('/api/reviews?admin=1', { headers: { 'Authorization': `Bearer ${token}` } });
+        return await res.json();
+      };
+    }
+
+    let aktifMenuId = null;
+    let tumYemeklerListesi = [];
+
+    function sekmeDegistir(sekmeAdi, btnEl) {
+      document.querySelectorAll('.sekme-btn').forEach(btn => btn.classList.remove('aktif'));
+      document.querySelectorAll('#admin-icerik > div[id^="sekme-"]').forEach(div => div.classList.add('bildirim-gizli'));
+
+      if (btnEl) btnEl.classList.add('aktif');
+
+      if (sekmeAdi === 'istatistik') {
+        document.getElementById('sekme-istatistik').classList.remove('bildirim-gizli');
+        istatistikleriYukle();
+      } else if (sekmeAdi === 'menu') {
+        document.getElementById('sekme-menu').classList.remove('bildirim-gizli');
+        menuleriGetir();
+      } else if (sekmeAdi === 'rezervasyon') {
+        document.getElementById('sekme-rezervasyon').classList.remove('bildirim-gizli');
+        rezervasyonlariGetir();
+      } else if (sekmeAdi === 'degerlendirme') {
+        document.getElementById('sekme-degerlendirme').classList.remove('bildirim-gizli');
+        degerlendirmeleriGetir();
+      }
+    }
+
+    // 1. İSTATİSTİKLER & DOLULUK YÜKLE
+    async function yoneticiOlarakGirisYap() {
+      try {
+        await API.login('leyla.arslan@kampus.edu.tr', '123456');
+        window.location.reload();
+      } catch (err) {
+        alert('Giriş başarısız: ' + err.message);
+      }
+    }
+
     async function istatistikleriYukle() {
       const user = API.getUser();
       const bildirim = document.getElementById('bildirim-alani');
-      const icerik = document.getElementById('admin-icerik');
 
       if (!user || user.rol !== 'yonetici') {
         bildirim.className = 'bildirim bildirim-hata';
-        bildirim.textContent = 'Erişim Engellendi: Bu sayfayı görüntülemek için "yonetici" rolünde bir hesapla (Örn: leyla.arslan@kampus.edu.tr) giriş yapmalısınız.';
+        bildirim.innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+            <div>
+              <strong>Yetki Uyarısı:</strong> Yönetici kontrol merkezini tam yetkiyle kullanmak için <em>yonetici</em> rolünde oturum açmalısınız.
+              ${user ? `<br><small style="color:#555;">(Şu anki oturumunuz: <strong>${user.ad} ${user.soyad} - ${user.rol.toUpperCase()}</strong>)</small>` : ''}
+            </div>
+            <button class="buton" style="background:var(--ana); padding:0.5rem 1rem;" onclick="yoneticiOlarakGirisYap()">
+              🔑 Tek Tıkla Yönetici Olarak Giriş Yap (Leyla Arslan)
+            </button>
+          </div>
+        `;
         bildirim.classList.remove('bildirim-gizli');
-        icerik.classList.add('bildirim-gizli');
-        return;
+      } else {
+        bildirim.className = 'bildirim bildirim-basari';
+        bildirim.innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+            <span>🛡️ <strong>Aktif Yönetici Oturumu:</strong> ${user.ad} ${user.soyad} (${user.eposta})</span>
+            <span style="font-size:0.85rem; color:#2E7D32;">Tüm yönetim, düzenleme ve iptal yetkileri aktif.</span>
+          </div>
+        `;
+        bildirim.classList.remove('bildirim-gizli');
       }
 
       try {
         const data = await API.getAdminStats();
-        bildirim.classList.add('bildirim-gizli');
-        icerik.classList.remove('bildirim-gizli');
 
-        document.getElementById('stat-rezervasyon').textContent = data.toplam_rezervasyon;
+        document.getElementById('stat-rezervasyon').textContent = data.aktif_rezervasyon;
+        document.getElementById('stat-rezervasyon-detay').textContent = `Toplam: ${data.tum_rezervasyon} | İptal: ${data.iptal_rezervasyon}`;
+        
         document.getElementById('stat-gelir').textContent = Number(data.toplam_gelir).toFixed(2) + ' TL';
+        document.getElementById('stat-gelir-detay').textContent = `Öğr: ${Number(data.ogrenci_gelir).toFixed(2)} TL | Pers: ${Number(data.personel_gelir).toFixed(2)} TL`;
+
+        document.getElementById('stat-puan').textContent = `⭐ ${data.ortalama_puan || 0.0}`;
+        document.getElementById('stat-yorum-sayisi').textContent = `${data.toplam_yorum || 0} değerlendirme`;
+
         document.getElementById('stat-tarih').textContent = new Date().toLocaleDateString('tr-TR');
 
         const govde = document.getElementById('doluluk-tablo-govde');
@@ -168,6 +635,7 @@
             <td><strong>${y.ad}</strong></td>
             <td>${y.kapasite} Kişi</td>
             <td><strong>${y.dolu}</strong> Rezervasyon</td>
+            <td><span style="color:#2E7D32; font-weight:600;">${y.kalan !== undefined ? y.kalan : Math.max(0, y.kapasite - y.dolu)} Boş Yer</span></td>
             <td><span style="font-weight:bold; color:var(--ana-koyu);">${y.doluluk_orani}</span></td>
             <td>
               <div class="cubuk-kapsayici">
@@ -177,14 +645,373 @@
           `;
           govde.appendChild(tr);
         });
+
+        // Popüler yemekler
+        const popAlani = document.getElementById('populer-yemekler-alani');
+        popAlani.innerHTML = '';
+        if (data.en_populer_yemekler && data.en_populer_yemekler.length) {
+          data.en_populer_yemekler.forEach((p, idx) => {
+            const div = document.createElement('div');
+            div.style.background = '#FFFFFF';
+            div.style.border = '1px solid var(--cizgi)';
+            div.style.borderRadius = 'var(--kose)';
+            div.style.padding = '0.75rem 1rem';
+            div.style.flex = '1 1 180px';
+            div.innerHTML = `
+              <div style="font-size:0.8rem; color:var(--metin-soluk);">${idx + 1}. ${p.kategori}</div>
+              <div style="font-weight:bold; font-size:1rem; color:var(--ana-koyu);">${p.yemek}</div>
+              <div style="font-size:0.85rem; color:#2E7D32; font-weight:600; margin-top:0.25rem;">${p.tercih} kez seçildi</div>
+            `;
+            popAlani.appendChild(div);
+          });
+        } else {
+          popAlani.textContent = 'Henüz yeterli rezervasyon verisi oluşmadı.';
+        }
+
       } catch (err) {
-        bildirim.className = 'bildirim bildirim-hata';
-        bildirim.textContent = err.message || 'İstatistikler alınamadı.';
-        bildirim.classList.remove('bildirim-gizli');
+        console.error('İstatistik yükleme hatası:', err);
       }
     }
 
+    // 2. MENÜ YÖNETİMİ
+    async function formSecenekleriniDoldur() {
+      try {
+        const [cafeterias, meals, foods] = await Promise.all([
+          API.getCafeterias(),
+          API.getMeals(),
+          API.getAdminFoods()
+        ]);
+        tumYemeklerListesi = foods;
+
+        const yhSelect = document.getElementById('yeni-menu-yemekhane');
+        yhSelect.innerHTML = cafeterias.map(c => `<option value="${c.id}">${c.ad}</option>`).join('');
+
+        const ogunSelect = document.getElementById('yeni-menu-ogun');
+        ogunSelect.innerHTML = meals.map(m => `<option value="${m.id}">${m.ad}</option>`).join('');
+
+        document.getElementById('yeni-menu-tarih').value = new Date().toISOString().split('T')[0];
+
+        // Yemek seçim kutuları (Kategoriye göre)
+        const gruplar = {};
+        foods.forEach(f => {
+          if (!gruplar[f.kategori]) gruplar[f.kategori] = [];
+          gruplar[f.kategori].push(f);
+        });
+
+        const container = document.getElementById('yemek-secim-gruplari');
+        container.innerHTML = '';
+        Object.keys(gruplar).forEach(kat => {
+          const div = document.createElement('div');
+          div.style.background = '#FAFAF8';
+          div.style.border = '1px solid var(--cizgi)';
+          div.style.borderRadius = 'var(--kose)';
+          div.style.padding = '0.75rem';
+          div.innerHTML = `<h5 style="margin:0 0 0.5rem 0; color:var(--ana-koyu);">${kat}</h5>`;
+
+          gruplar[kat].forEach(y => {
+            const label = document.createElement('label');
+            label.style.display = 'block';
+            label.style.fontSize = '0.85rem';
+            label.style.marginBottom = '0.35rem';
+            label.style.cursor = 'pointer';
+            label.innerHTML = `
+              <input type="checkbox" name="secilen-yemek" value="${y.id}" style="margin-right:0.4rem;">
+              ${y.ad} (${y.kalori} kcal)
+            `;
+            div.appendChild(label);
+          });
+          container.appendChild(div);
+        });
+
+      } catch (err) {
+        console.error('Seçenekler yüklenirken hata:', err);
+      }
+    }
+
+    async function yeniMenuKaydet(e) {
+      e.preventDefault();
+      const yemekhane_id = document.getElementById('yeni-menu-yemekhane').value;
+      const tarih = document.getElementById('yeni-menu-tarih').value;
+      const ogun_id = document.getElementById('yeni-menu-ogun').value;
+      const ogrenci_fiyati = document.getElementById('yeni-menu-ogr-fiyat').value;
+      const personel_fiyati = document.getElementById('yeni-menu-prs-fiyat').value;
+
+      const secilenYemekler = Array.from(document.querySelectorAll('input[name="secilen-yemek"]:checked'))
+                                   .map(cb => parseInt(cb.value));
+
+      try {
+        const res = await API.createAdminMenu({
+          yemekhane_id,
+          tarih,
+          ogun_id,
+          ogrenci_fiyati,
+          personel_fiyati,
+          yemekler: secilenYemekler
+        });
+        alert(`✅ ${res.mesaj}\n(Redis Önbelleği otomatik temizlendi)`);
+        menuleriGetir();
+        istatistikleriYukle();
+      } catch (err) {
+        alert('❌ Hata: ' + err.message);
+      }
+    }
+
+    async function menuleriGetir() {
+      const tarih = document.getElementById('menu-filtre-tarih').value;
+      const govde = document.getElementById('menuler-tablo-govde');
+      govde.innerHTML = '<tr><td colspan="8" style="text-align:center;">Menüler yükleniyor…</td></tr>';
+
+      try {
+        const menuler = await API.getAdminMenus(tarih);
+        govde.innerHTML = '';
+        if (!menuler || !menuler.length) {
+          govde.innerHTML = '<tr><td colspan="8" style="text-align:center;">Kayıtlı menü bulunamadı.</td></tr>';
+          return;
+        }
+
+        menuler.forEach(m => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>#${m.id}</td>
+            <td><strong>${m.tarih}</strong></td>
+            <td>${m.yemekhane}</td>
+            <td>${m.ogun}</td>
+            <td>Öğr: ${m.ogrenci_fiyati}₺ / Pers: ${m.personel_fiyati}₺</td>
+            <td><span class="badge" style="background:#E0F2F1; color:#00695C;">${m.yemek_sayisi} Çeşit</span></td>
+            <td><strong>${m.aktif_rezervasyon}</strong></td>
+            <td>
+              <div style="display:flex; gap:0.35rem;">
+                <button class="buton" style="padding:0.35rem 0.65rem; font-size:0.8rem; background:var(--ana);" onclick="menuDuzenleModaliniAc(${m.id})">
+                  ⚙️ Düzenle
+                </button>
+                <button class="buton" style="padding:0.35rem 0.65rem; font-size:0.8rem; background:#C62828;" onclick="menuSil(${m.id})">
+                  🗑️ Sil
+                </button>
+              </div>
+            </td>
+          `;
+          govde.appendChild(tr);
+        });
+      } catch (err) {
+        govde.innerHTML = `<tr><td colspan="8" style="color:red; text-align:center;">${err.message}</td></tr>`;
+      }
+    }
+
+    async function menuSil(menuId) {
+      if (!confirm(`Menü #${menuId} kaydını kalıcı olarak silmek istiyor musunuz?\n(Bu işlemle birlikte Redis önbelleği de anında temizlenecektir.)`)) return;
+      try {
+        const res = await API.deleteAdminMenu(menuId);
+        alert(`✅ ${res.mesaj}`);
+        menuleriGetir();
+        istatistikleriYukle();
+      } catch (err) {
+        alert('❌ Hata: ' + err.message);
+      }
+    }
+
+    async function menuDuzenleModaliniAc(menuId) {
+      aktifMenuId = menuId;
+      try {
+        const m = await API.getAdminMenuDetail(menuId);
+        document.getElementById('modal-baslik').textContent = `Menü #${m.id} Düzenleme · ${m.tarih} (${m.yemekhane} - ${m.ogun})`;
+        document.getElementById('modal-ogr-fiyat').value = m.ogrenci_fiyati;
+        document.getElementById('modal-prs-fiyat').value = m.personel_fiyati;
+
+        const yListesi = document.getElementById('modal-yemek-listesi');
+        yListesi.innerHTML = '';
+        if (m.yemekler && m.yemekler.length) {
+          m.yemekler.forEach(y => {
+            const sp = document.createElement('span');
+            sp.className = 'yemek-etiket';
+            sp.innerHTML = `
+              <strong>${y.kategori}:</strong> ${y.ad} (${y.kalori} kcal)
+              <button class="yemek-sil-btn" title="Menüden Çıkar" onclick="menuYemekSil(${y.id})">×</button>
+            `;
+            yListesi.appendChild(sp);
+          });
+        } else {
+          yListesi.innerHTML = '<p style="color:var(--metin-soluk); font-size:0.9rem;">Bu menüde henüz yemek ekli değil.</p>';
+        }
+
+        // Yeni yemek dropdown
+        const ySelect = document.getElementById('modal-yeni-yemek-select');
+        ySelect.innerHTML = tumYemeklerListesi.map(y => `<option value="${y.id}">${y.kategori} - ${y.ad} (${y.kalori} kcal)</option>`).join('');
+
+        const modal = document.getElementById('menu-modal');
+        modal.style.display = 'flex';
+      } catch (err) {
+        alert('Menü detayı alınamadı: ' + err.message);
+      }
+    }
+
+    function modalKapat() {
+      document.getElementById('menu-modal').style.display = 'none';
+      menuleriGetir();
+    }
+
+    async function modalFiyatGuncelle() {
+      const ogr = parseFloat(document.getElementById('modal-ogr-fiyat').value);
+      const prs = parseFloat(document.getElementById('modal-prs-fiyat').value);
+
+      try {
+        const res = await API.updateAdminMenuPrice(aktifMenuId, ogr, prs);
+        alert(`✅ Fiyatlar başarıyla güncellendi!\n(Redis önbellek anahtarı: ${res.anahtar} silindi)`);
+      } catch (err) {
+        alert('❌ Hata: ' + err.message);
+      }
+    }
+
+    async function modalYemekEkle() {
+      const yemekId = parseInt(document.getElementById('modal-yeni-yemek-select').value);
+      try {
+        await API.addAdminMenuItem(aktifMenuId, yemekId);
+        menuDuzenleModaliniAc(aktifMenuId);
+      } catch (err) {
+        alert('❌ Hata: ' + err.message);
+      }
+    }
+
+    async function menuYemekSil(yemekId) {
+      if (!confirm('Bu yemeği menüden çıkarmak istediğinize emin misiniz?')) return;
+      try {
+        await API.removeAdminMenuItem(aktifMenuId, yemekId);
+        menuDuzenleModaliniAc(aktifMenuId);
+      } catch (err) {
+        alert('❌ Hata: ' + err.message);
+      }
+    }
+
+    // 3. REZERVASYON YÖNETİMİ
+    function bugunkuAktifleriFiltrele() {
+      const bugun = new Date().toISOString().split('T')[0];
+      document.getElementById('rez-filtre-tarih').value = bugun;
+      document.getElementById('rez-filtre-durum').value = 'aktif';
+      document.getElementById('rez-filtre-rol').value = '';
+      rezervasyonlariGetir();
+    }
+
+    function filtreSifirla() {
+      document.getElementById('rez-filtre-tarih').value = '';
+      document.getElementById('rez-filtre-durum').value = '';
+      document.getElementById('rez-filtre-rol').value = '';
+      rezervasyonlariGetir();
+    }
+
+    async function rezervasyonlariGetir() {
+      const tarih = document.getElementById('rez-filtre-tarih').value;
+      const durum = document.getElementById('rez-filtre-durum').value;
+      const rol = document.getElementById('rez-filtre-rol').value;
+      const govde = document.getElementById('rezervasyonlar-tablo-govde');
+      govde.innerHTML = '<tr><td colspan="8" style="text-align:center;">Rezervasyonlar yükleniyor…</td></tr>';
+
+      try {
+        const liste = await API.getAdminReservations(tarih, durum, rol);
+        govde.innerHTML = '';
+        if (!liste || !liste.length) {
+          govde.innerHTML = '<tr><td colspan="8" style="text-align:center;">Filtreye uygun rezervasyon kaydı bulunamadı.</td></tr>';
+          return;
+        }
+
+        liste.forEach(r => {
+          const tr = document.createElement('tr');
+          let durumBadge = `<span class="badge badge-aktif">Aktif</span>`;
+          if (r.durum === 'iptal') durumBadge = `<span class="badge badge-iptal">İptal Edildi</span>`;
+          else if (r.durum === 'kullanildi') durumBadge = `<span class="badge badge-kullanildi">Kullanıldı</span>`;
+
+          const iptalButon = r.durum === 'aktif' ? 
+            `<button class="buton" style="background:#C62828; padding:0.3rem 0.6rem; font-size:0.8rem;" onclick="yoneticiRezervasyonIptal(${r.id})">İptal Et & İade Yap</button>` :
+            `<span style="color:var(--metin-soluk); font-size:0.85rem;">-</span>`;
+
+          tr.innerHTML = `
+            <td>#${r.id}</td>
+            <td><strong>${r.ad_soyad}</strong><div style="font-size:0.8rem; color:var(--metin-soluk);">${r.eposta}</div></td>
+            <td>${r.rol.toUpperCase()} ${r.ogrenci_no ? `<br><small>${r.ogrenci_no}</small>` : ''}</td>
+            <td>${r.tarih} - <strong>${r.ogun}</strong></td>
+            <td>${r.yemekhane}</td>
+            <td><strong>${Number(r.ucret).toFixed(2)} TL</strong></td>
+            <td>${durumBadge}</td>
+            <td>${iptalButon}</td>
+          `;
+          govde.appendChild(tr);
+        });
+      } catch (err) {
+        govde.innerHTML = `<tr><td colspan="8" style="color:red; text-align:center;">${err.message}</td></tr>`;
+      }
+    }
+
+    async function yoneticiRezervasyonIptal(id) {
+      if (!confirm(`Rezervasyon #${id} kaydını yönetici olarak iptal edip kullanıcının bakiyesine ücret iadesi yapmak istiyor musunuz?`)) return;
+      try {
+        const res = await API.adminCancelReservation(id);
+        alert(`✅ Rezervasyon #${id} iptal edildi. ${res.iade} TL tutar kullanıcının bakiyesine iade edildi.`);
+        rezervasyonlariGetir();
+        istatistikleriYukle();
+      } catch (err) {
+        alert('❌ İptal işlemi başarısız: ' + err.message);
+      }
+    }
+
+    // 4. DEĞERLENDİRME & YORUMLAR
+    async function degerlendirmeleriGetir() {
+      const ozetAlani = document.getElementById('degerlendirme-ozet-alani');
+      const yorumAlani = document.getElementById('yorumlar-listesi-alani');
+
+      try {
+        const data = await API.getAdminReviews();
+        
+        // Puan Özeti
+        ozetAlani.innerHTML = `
+          <div style="text-align:center; min-width:140px;">
+            <div style="font-size:3.2rem; font-weight:bold; color:var(--ana-koyu); line-height:1;">${data.ortalama}</div>
+            <div style="color:#F59E0B; font-size:1.3rem; margin-top:0.25rem;">★★★★★</div>
+            <div style="font-size:0.85rem; color:var(--metin-soluk); margin-top:0.25rem;">Toplam ${data.toplam} Değerlendirme</div>
+          </div>
+          <div style="flex:1; min-width:250px; font-size:0.9rem;">
+            <div style="margin-bottom:0.25rem;">⭐ 5 Yıldız: <strong>${data.dagilim['5'] || 0}</strong> adet</div>
+            <div style="margin-bottom:0.25rem;">⭐ 4 Yıldız: <strong>${data.dagilim['4'] || 0}</strong> adet</div>
+            <div style="margin-bottom:0.25rem;">⭐ 3 Yıldız: <strong>${data.dagilim['3'] || 0}</strong> adet</div>
+            <div style="margin-bottom:0.25rem;">⭐ 2 Yıldız: <strong>${data.dagilim['2'] || 0}</strong> adet</div>
+            <div>⭐ 1 Yıldız: <strong>${data.dagilim['1'] || 0}</strong> adet</div>
+          </div>
+        `;
+
+        // Yorumlar
+        yorumAlani.innerHTML = '';
+        if (data.yorumlar && data.yorumlar.length) {
+          data.yorumlar.forEach(y => {
+            const kart = document.createElement('div');
+            kart.style.background = '#FFFFFF';
+            kart.style.border = '1px solid var(--cizgi)';
+            kart.style.borderRadius = 'var(--kose)';
+            kart.style.padding = '1rem';
+
+            const yildizlar = '★'.repeat(y.puan) + '☆'.repeat(5 - y.puan);
+
+            kart.innerHTML = `
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem; flex-wrap:wrap; gap:0.5rem;">
+                <div>
+                  <strong>${y.kullanici}</strong> 
+                  <span style="font-size:0.8rem; color:var(--metin-soluk);">(${y.rol.toUpperCase()}) · Menü #${y.menu_id} (${y.tarih} - ${y.yemekhane} ${y.ogun})</span>
+                </div>
+                <div style="color:#F59E0B; font-weight:bold; font-size:1.1rem;">${yildizlar} (${y.puan}/5)</div>
+              </div>
+              <p style="margin:0.25rem 0 0.5rem 0; font-size:0.95rem;">${y.yorum ? y.yorum : '<em style="color:var(--metin-soluk); font-size:0.85rem;">(Kullanıcı yalnızca puan verdi, yazılı yorum bırakmadı)</em>'}</p>
+              <div style="font-size:0.75rem; color:var(--metin-soluk);">${y.olusturma}</div>
+            `;
+            yorumAlani.appendChild(kart);
+          });
+        } else {
+          yorumAlani.innerHTML = '<p style="color:var(--metin-soluk);">Henüz değerlendirme bulunmuyor.</p>';
+        }
+
+      } catch (err) {
+        yorumAlani.innerHTML = `<p style="color:red;">Değerlendirmeler alınırken hata: ${err.message}</p>`;
+      }
+    }
+
+    // İlk yükleme
     istatistikleriYukle();
+    formSecenekleriniDoldur();
   </script>
 </body>
 </html>

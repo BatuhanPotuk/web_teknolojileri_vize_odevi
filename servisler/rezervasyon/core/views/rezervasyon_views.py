@@ -96,3 +96,30 @@ def menu_doluluk_view(request, menu_id):
     if not doluluk:
         return JsonResponse({"hata": "Menü bulunamadı."}, status=404)
     return JsonResponse(doluluk)
+
+def admin_rezervasyonlar_view(request):
+    if request.method != 'GET':
+        return HttpResponseNotAllowed(['GET'])
+
+    tarih = request.GET.get('tarih')
+    durum = request.GET.get('durum')
+    rol = request.GET.get('rol')
+    liste = RezervasyonService.admin_rezervasyonlari(tarih=tarih, durum=durum, rol=rol)
+    return JsonResponse(liste, safe=False)
+
+def admin_rezervasyon_iptal_view(request, id):
+    rol = request.headers.get('X-Rol', '')
+    if rol != 'yonetici':
+        return JsonResponse({"detail": "Bu işlem için yönetici yetkisi gereklidir."}, status=403)
+
+    if request.method not in ['POST', 'DELETE']:
+        return HttpResponseNotAllowed(['POST', 'DELETE'])
+
+    try:
+        sonuc = RezervasyonService.admin_iptal_et(id)
+        return JsonResponse(sonuc, status=200)
+    except IsKuraliHatasi as err:
+        return JsonResponse({"hata": err.mesaj}, status=err.durum_kodu)
+    except Exception as err:
+        return JsonResponse({"hata": str(err)}, status=400)
+

@@ -16,7 +16,8 @@ class OturumRepository:
         return cls._istemci
 
     @classmethod
-    def oturum_olustur(cls, token: str, veri: dict, ttl: int = 86400):
+    def oturum_olustur(cls, token: str, veri: dict, ttl: int = 1800):
+        """Oturumu 30 dakika (1800 sn) süreyle Redis'e kaydeder."""
         r = cls.baglanti()
         r.setex(f"oturum:{token}", ttl, json.dumps(veri))
 
@@ -27,6 +28,13 @@ class OturumRepository:
         return json.loads(veri) if veri else None
 
     @classmethod
+    def oturum_sure_uzat(cls, token: str, ttl: int = 1800):
+        """Her istekte oturum süresini 30 dakika daha uzatır (sliding expiration)."""
+        r = cls.baglanti()
+        r.expire(f"oturum:{token}", ttl)
+
+    @classmethod
     def oturum_sil(cls, token: str):
+        """Çıkış yapıldığında oturumu Redis'ten siler."""
         r = cls.baglanti()
         r.delete(f"oturum:{token}")

@@ -249,5 +249,164 @@ const API = {
             throw new Error(data.detail || 'İstatistikler alınamadı.');
         }
         return await res.json();
+    },
+
+    async getAdminMenus(tarih = '') {
+        const token = this.getToken();
+        let url = '/api/admin/menus';
+        if (tarih) url += `?tarih=${tarih}`;
+        const res = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            throw new Error(data.detail || data.hata || 'Menüler alınamadı.');
+        }
+        return await res.json();
+    },
+
+    async getAdminMenuDetail(id) {
+        const token = this.getToken();
+        const res = await fetch(`/api/admin/menus/${id}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            throw new Error(data.detail || data.hata || 'Menü detayı alınamadı.');
+        }
+        return await res.json();
+    },
+
+    async createAdminMenu(menuData) {
+        const token = this.getToken();
+        const res = await fetch('/api/admin/menus', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(menuData)
+        });
+        const data = await res.json();
+        if (!res.ok) {
+            throw new Error(data.detail || data.hata || 'Menü oluşturulamadı.');
+        }
+        return data;
+    },
+
+    async updateAdminMenuPrice(id, ogrenci_fiyati, personel_fiyati) {
+        const token = this.getToken();
+        const res = await fetch(`/api/admin/menus/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ ogrenci_fiyati, personel_fiyati })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+            throw new Error(data.detail || data.hata || 'Fiyat güncellenemedi.');
+        }
+        return data;
+    },
+
+    async addAdminMenuItem(menuId, yemekId) {
+        const token = this.getToken();
+        const res = await fetch(`/api/admin/menus/${menuId}/items`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ yemek_id: yemekId })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+            throw new Error(data.detail || data.hata || 'Yemek eklenemedi.');
+        }
+        return data;
+    },
+
+    async removeAdminMenuItem(menuId, yemekId) {
+        const token = this.getToken();
+        const res = await fetch(`/api/admin/menus/${menuId}/items/${yemekId}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (!res.ok) {
+            throw new Error(data.detail || data.hata || 'Yemek çıkarılamadı.');
+        }
+        return data;
+    },
+
+    async getAdminFoods() {
+        const token = this.getToken();
+        const res = await fetch('/api/admin/foods', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            throw new Error(data.detail || data.hata || 'Yemekler alınamadı.');
+        }
+        return await res.json();
+    },
+
+    async deleteAdminMenu(id) {
+        const token = this.getToken();
+        const res = await fetch(`/api/admin/menus/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (!res.ok) {
+            throw new Error(data.detail || data.hata || 'Menü silinemedi.');
+        }
+        return data;
+    },
+
+    async getAdminReservations(tarih = '', durum = '', rol = '') {
+        const token = this.getToken();
+        let url = '/api/reservations/admin';
+        const params = [];
+        if (tarih) params.push(`tarih=${tarih}`);
+        if (durum) params.push(`durum=${durum}`);
+        if (rol) params.push(`rol=${rol}`);
+        if (params.length) url += '?' + params.join('&');
+
+        const res = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            throw new Error(data.detail || data.hata || 'Rezervasyonlar alınamadı.');
+        }
+        return await res.json();
+    },
+
+    async adminCancelReservation(id) {
+        const token = this.getToken();
+        const res = await fetch(`/api/reservations/admin/${id}/cancel`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (!res.ok) {
+            throw new Error(data.detail || data.hata || 'Rezervasyon iptal edilemedi.');
+        }
+        return data;
+    },
+
+    async getAdminReviews() {
+        const token = this.getToken();
+        const res = await fetch('/api/reviews?admin=1', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            throw new Error(data.detail || data.hata || 'Değerlendirmeler alınamadı.');
+        }
+        return await res.json();
     }
 };

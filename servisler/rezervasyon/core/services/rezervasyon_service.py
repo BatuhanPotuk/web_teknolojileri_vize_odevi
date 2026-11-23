@@ -58,3 +58,31 @@ class RezervasyonService:
     @staticmethod
     def doluluk_bilgisi(menu_id: int) -> dict:
         return RezervasyonRepository.menu_doluluk(menu_id)
+
+    @staticmethod
+    def admin_rezervasyonlari(tarih: str = None, durum: str = None, rol: str = None) -> list:
+        rows = RezervasyonRepository.admin_rezervasyonlar(tarih=tarih, durum=durum, rol=rol)
+        return [{
+            "id": r[0],
+            "kullanici_id": r[1],
+            "ad_soyad": r[2],
+            "eposta": r[3],
+            "ogrenci_no": r[4],
+            "rol": r[5],
+            "menu_id": r[6],
+            "durum": r[7],
+            "ucret": float(r[8]),
+            "olusturma": str(r[9]),
+            "iptal_zamani": str(r[10]) if r[10] else None,
+            "tarih": str(r[11]),
+            "yemekhane": r[12],
+            "ogun": r[13]
+        } for r in rows]
+
+    @staticmethod
+    def admin_iptal_et(rezervasyon_id: int) -> dict:
+        kullanici_id = RezervasyonRepository.rezervasyon_kullanici_id(rezervasyon_id)
+        if not kullanici_id:
+            raise ValueError("Rezervasyon bulunamadı.")
+        return RezervasyonRepository.sp_rezervasyon_iptal(kullanici_id, rezervasyon_id)
+

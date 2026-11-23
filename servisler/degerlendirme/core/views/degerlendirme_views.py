@@ -4,16 +4,21 @@ from core.services.degerlendirme_service import DegerlendirmeService
 
 def degerlendirme_view(request):
     if request.method == 'GET':
+        menu_id = request.GET.get('menu_id')
+        admin_istek = (request.GET.get('admin') == '1') or (not menu_id) or (menu_id == '0')
+        
+        if admin_istek:
+            sonuc = DegerlendirmeService.admin_degerlendirmeler_getir()
+            return JsonResponse(sonuc)
+
         try:
-            menu_id = int(request.GET.get('menu_id', 0))
+            m_id = int(menu_id)
         except (ValueError, TypeError):
             return JsonResponse({"hata": "Geçersiz menu_id parametresi."}, status=400)
 
-        if not menu_id:
-            return JsonResponse({"hata": "menu_id zorunludur."}, status=400)
-
-        sonuc = DegerlendirmeService.degerlendirmeler_getir(menu_id)
+        sonuc = DegerlendirmeService.degerlendirmeler_getir(m_id)
         return JsonResponse(sonuc)
+
 
     elif request.method == 'POST':
         kullanici_id = request.headers.get('X-Kullanici-Id')

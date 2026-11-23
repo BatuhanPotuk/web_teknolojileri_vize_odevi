@@ -40,3 +40,29 @@ class DegerlendirmeService:
             "toplam_sayi": istatistik["sayi"],
             "yorumlar": yorumlar
         }
+
+    @staticmethod
+    def admin_degerlendirmeler_getir() -> dict:
+        ozet = DegerlendirmeRepository.genel_ozet()
+        rows = DegerlendirmeRepository.tum_degerlendirmeler(limit=100)
+        yorumlar = [{
+            "id": r[0],
+            "kullanici_id": r[1],
+            "kullanici": r[2],
+            "rol": r[3],
+            "menu_id": r[4],
+            "tarih": str(r[5]),
+            "yemekhane": r[6],
+            "ogun": r[7],
+            "puan": r[8],
+            "yorum": r[9],
+            "olusturma": str(r[10])
+        } for r in rows]
+
+        return {
+            "ortalama": ozet["ortalama"],
+            "toplam": ozet["toplam"],
+            "dagilim": ozet["dagilim"],
+            "yorumlar": yorumlar
+        }
+
