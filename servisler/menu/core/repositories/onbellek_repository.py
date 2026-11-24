@@ -69,3 +69,25 @@ class OnbellekRepository:
                 r.delete(key)
         except Exception:
             pass
+
+    @classmethod
+    def tum_menuleri_temizle(cls) -> int:
+        """Tüm menu:* önbellek kayıtlarını temizler."""
+        try:
+            r = cls.baglanti()
+            if r:
+                anahtarlar = r.keys("menu:*")
+                if anahtarlar:
+                    silinen = r.delete(*anahtarlar)
+                    print(f"[CACHE FLUSH] {silinen} adet menü önbellek anahtarı temizlendi.", flush=True)
+                    return silinen
+            return 0
+        except Exception as e:
+            print(f"[CACHE FLUSH ERROR] {e}", flush=True)
+            return 0
+
+if __name__ == "__main__":
+    import sys
+    print("Redis menü önbelleği temizleniyor...")
+    silinen = OnbellekRepository.tum_menuleri_temizle()
+    print(f"Tamamlandı: {silinen} kayıt silindi.")

@@ -15,14 +15,17 @@ def rezervasyon_yap_view(request):
     try:
         body = json.loads(request.body.decode('utf-8'))
         menu_id = int(body.get('menu_id'))
+        porsiyon = body.get('porsiyon', 'tam')
+        if porsiyon not in ('tam', 'yarim'):
+            porsiyon = 'tam'
     except (ValueError, TypeError, json.JSONDecodeError):
         return JsonResponse({"hata": "Geçersiz menü ID."}, status=400)
 
     try:
-        sonuc = RezervasyonService.rezervasyon_yap(int(kullanici_id), menu_id)
+        sonuc = RezervasyonService.rezervasyon_yap(int(kullanici_id), menu_id, porsiyon)
         return JsonResponse(sonuc, status=201)
     except IsKuraliHatasi as err:
-        return JsonResponse({"hata": err.mesaj}, status=err.durum_kodu)
+        return JsonResponse({"hata": err.mesaj, "detail": err.mesaj}, status=err.durum_kodu)
 
 def rezervasyon_iptal_view(request, id):
     if request.method != 'DELETE':
@@ -36,7 +39,7 @@ def rezervasyon_iptal_view(request, id):
         sonuc = RezervasyonService.rezervasyon_iptal(int(kullanici_id), id)
         return JsonResponse(sonuc, status=200)
     except IsKuraliHatasi as err:
-        return JsonResponse({"hata": err.mesaj}, status=err.durum_kodu)
+        return JsonResponse({"hata": err.mesaj, "detail": err.mesaj}, status=err.durum_kodu)
 
 def rezervasyonlarim_view(request):
     if request.method != 'GET':
@@ -82,7 +85,7 @@ def bakiye_yukle_view(request):
         sonuc = RezervasyonService.bakiye_yukle(int(kullanici_id), tutar)
         return JsonResponse(sonuc, status=200)
     except IsKuraliHatasi as err:
-        return JsonResponse({"hata": err.mesaj}, status=err.durum_kodu)
+        return JsonResponse({"hata": err.mesaj, "detail": err.mesaj}, status=err.durum_kodu)
 
 def menu_doluluk_view(request, menu_id):
     if request.method != 'GET':
@@ -119,7 +122,7 @@ def admin_rezervasyon_iptal_view(request, id):
         sonuc = RezervasyonService.admin_iptal_et(id)
         return JsonResponse(sonuc, status=200)
     except IsKuraliHatasi as err:
-        return JsonResponse({"hata": err.mesaj}, status=err.durum_kodu)
+        return JsonResponse({"hata": err.mesaj, "detail": err.mesaj}, status=err.durum_kodu)
     except Exception as err:
         return JsonResponse({"hata": str(err)}, status=400)
 

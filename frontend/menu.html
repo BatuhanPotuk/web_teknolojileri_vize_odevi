@@ -3,8 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>Günün Menüsü · Yemekhane Otomasyonu</title>
-  <link rel="stylesheet" href="/css/temel.css">
+  <link rel="stylesheet" href="/css/temel.css?v=4.2">
   <style>
     .nav-bar {
       background: var(--ana-koyu);
@@ -120,6 +123,19 @@
       padding: 0.15rem 0.5rem;
       border-radius: 4px;
     }
+    .rozet-kullanici-alerjen {
+      background: #DC2626 !important;
+      color: #FFFFFF !important;
+      font-size: 0.8rem !important;
+      font-weight: 700 !important;
+      padding: 0.25rem 0.65rem !important;
+      border-radius: 4px !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      gap: 0.35rem !important;
+      border: 1px solid #B91C1C !important;
+      box-shadow: 0 1px 3px rgba(220, 38, 38, 0.35) !important;
+    }
     .kalori-deger {
       font-weight: bold;
       color: var(--metin-soluk);
@@ -173,6 +189,16 @@
 
     <!-- MENÜ DETAY KARTI -->
     <div id="menu-karti" class="kart bildirim-gizli">
+      <!-- GENEL ALERJEN UYARI KUTUSU -->
+      <div id="menu-alerjen-uyari-kutusu" style="display:none; margin-bottom:1.25rem; padding:1rem 1.25rem; background:#FEF2F2; border:2px solid #DC2626; border-radius:var(--kose); box-shadow:0 2px 4px rgba(220,38,38,0.1);">
+        <div style="display:flex; align-items:center; gap:0.5rem; font-weight:bold; font-size:1.05rem; color:#991B1B; margin-bottom:0.35rem;">
+          ⚠️ DİKKAT: Alerji Riski Uyarısı!
+        </div>
+        <div id="menu-alerjen-uyari-metni" style="font-size:0.92rem; color:#7F1D1D; line-height:1.4;">
+          Bu menüde profilinizde seçtiğiniz alerjenleri içeren yemekler bulunmaktadır.
+        </div>
+      </div>
+
       <div class="menu-baslik">
         <div>
           <h2 id="menu-baslik-yazi" style="margin-bottom:0.25rem;">-</h2>
@@ -189,8 +215,38 @@
         <div><strong>Son Rezervasyon:</strong> <span id="son-rezervasyon">-</span></div>
       </div>
 
+      <!-- KULLANICI ALERJEN BİLGİ BARI -->
+      <div id="kullanici-alerjen-bilgi-bari" style="margin-top:1rem; margin-bottom:1rem; padding:0.65rem 0.9rem; background:#FFFBEB; border:1px solid #FCD34D; border-radius:6px; font-size:0.875rem; color:#92400E; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.5rem;">
+        <div>
+          <strong>👤 Profilinizdeki Alerjenler:</strong> <span id="span-kayitli-alerjenler" style="font-weight:700; color:#B45309;">Yükleniyor…</span>
+        </div>
+        <a href="/index.html" style="color:#B45309; font-weight:600; text-decoration:underline; font-size:0.8rem;">Alerjen Tercihlerini Değiştir</a>
+      </div>
+
       <h3 style="margin-bottom:0.75rem;">Yemek Listesi</h3>
       <ul class="yemek-listesi" id="yemek-listesi"></ul>
+
+      <!-- PORSİYON SEÇİMİ -->
+      <div id="porsiyon-secim-alani" style="margin-top:1.25rem; padding:1rem; background:#F8FAFC; border:1px solid #E2E8F0; border-radius:var(--kose);">
+        <strong style="display:block; margin-bottom:0.6rem; font-size:0.95rem; color:#1F2A2E;">Porsiyon Tercihi:</strong>
+        <div id="porsiyon-secenekleri" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:0.75rem;">
+          <label id="lbl-tam-porsiyon" onclick="porsiyonSec('tam')" style="cursor:pointer; display:flex; align-items:center; gap:0.6rem; padding:0.75rem 1rem; border:2px solid var(--ana); background:#ECFDF5; border-radius:6px; user-select:none;">
+            <input type="radio" name="secili-porsiyon" id="rd-porsiyon-tam" value="tam" checked style="width:18px !important; height:18px !important; accent-color:var(--ana);">
+            <div>
+              <strong style="color:var(--ana-koyu); display:block; font-size:1rem;">Tam Porsiyon (100%)</strong>
+              <span style="font-size:0.85rem; color:#374151;"><span id="tam-porsiyon-ucret">-</span> TL</span>
+            </div>
+          </label>
+          <label id="lbl-yarim-porsiyon" onclick="porsiyonSec('yarim')" style="cursor:pointer; display:flex; align-items:center; gap:0.6rem; padding:0.75rem 1rem; border:1px solid #D1D5DB; background:#FFFFFF; border-radius:6px; user-select:none;">
+            <input type="radio" name="secili-porsiyon" id="rd-porsiyon-yarim" value="yarim" style="width:18px !important; height:18px !important; accent-color:var(--ana);">
+            <div>
+              <strong style="color:#B45309; display:block; font-size:1rem;">Yarım Porsiyon (%60)</strong>
+              <span style="font-size:0.85rem; color:#374151;"><span id="yarim-porsiyon-ucret">-</span> TL</span>
+            </div>
+          </label>
+        </div>
+        <div id="porsiyon-bilgi-notu" style="font-size:0.85rem; color:#B45309; margin-top:0.6rem; display:none; font-weight:600; padding:0.4rem 0.6rem; background:#FEF3C7; border-radius:4px;"></div>
+      </div>
 
       <div style="margin-top:1.5rem; padding-top:1rem; border-top:1px solid var(--cizgi); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
         <div>
@@ -201,11 +257,98 @@
     </div>
   </main>
 
-  <script src="/js/api.js"></script>
+  <script src="/js/api.js?v=4.3"></script>
   <script>
     // Varsayılan tarihi bugün yap (YYYY-MM-DD)
     const bugun = new Date().toISOString().split('T')[0];
     document.getElementById('inp-tarih').value = bugun;
+
+    let aktifKullaniciAlerjenleri = [];
+    let tumAlerjenlerMap = {};
+
+    const ALERJEN_MAP = {
+      1: "Gluten", 2: "Kabuklu deniz ürünleri", 3: "Yumurta", 4: "Balık",
+      5: "Yer fıstığı", 6: "Soya", 7: "Süt", 8: "Sert kabuklu yemişler",
+      9: "Kereviz", 10: "Hardal", 11: "Susam", 12: "Sülfitler",
+      13: "Acı bakla", 14: "Yumuşakçalar"
+    };
+
+    function kullaniciAlerjenleriniTopla() {
+      const seciliIds = new Set();
+      if (Array.isArray(aktifKullaniciAlerjenleri)) {
+        aktifKullaniciAlerjenleri.forEach(id => seciliIds.add(parseInt(id)));
+      }
+      const u = API.getUser();
+      if (u && Array.isArray(u.alerjenler)) {
+        u.alerjenler.forEach(id => seciliIds.add(parseInt(id)));
+      }
+      return Array.from(seciliIds).filter(x => !isNaN(x));
+    }
+
+    function yemekteAlerjiBul(yemek) {
+      const userIds = kullaniciAlerjenleriniTopla();
+      if (userIds.length === 0) return [];
+
+      const userAdlar = userIds.map(id => (ALERJEN_MAP[id] || '').toLowerCase()).filter(Boolean);
+      const bulunanAdlar = [];
+
+      // 1. ID bazlı kontrol
+      const yIds = (yemek.alerjen_idler || []).map(id => parseInt(id));
+      userIds.forEach(uId => {
+        if (yIds.includes(uId) && ALERJEN_MAP[uId]) {
+          if (!bulunanAdlar.includes(ALERJEN_MAP[uId])) {
+            bulunanAdlar.push(ALERJEN_MAP[uId]);
+          }
+        }
+      });
+
+      // 2. Metin bazlı kontrol ("Gluten, Yumurta")
+      if (yemek.alerjenler && typeof yemek.alerjenler === 'string') {
+        const parcalar = yemek.alerjenler.split(',').map(s => s.trim());
+        parcalar.forEach(p => {
+          const pLower = p.toLowerCase();
+          userAdlar.forEach((uAd, idx) => {
+            if (pLower.includes(uAd) || uAd.includes(pLower)) {
+              const gercekAd = ALERJEN_MAP[userIds[idx]] || p;
+              if (!bulunanAdlar.includes(gercekAd)) {
+                bulunanAdlar.push(gercekAd);
+              }
+            }
+          });
+        });
+      }
+
+      return bulunanAdlar;
+    }
+
+    async function kullaniciAlerjenleriniGetir() {
+      try {
+        if (API.getToken()) {
+          const data = await API.getAllergens();
+          aktifKullaniciAlerjenleri = data.kullanici_alerjenleri || [];
+          (data.tum_alerjenler || []).forEach(a => {
+            tumAlerjenlerMap[a.id] = a.ad;
+          });
+          const user = API.getUser();
+          if (user) {
+            user.alerjenler = aktifKullaniciAlerjenleri;
+            API.setUser(user);
+          }
+        }
+      } catch (e) {
+        console.warn('Alerjenler alınamadı:', e);
+      }
+      // Bilgi barını güncelle
+      const span = document.getElementById('span-kayitli-alerjenler');
+      if (span) {
+        const userIds = kullaniciAlerjenleriniTopla();
+        if (userIds.length > 0) {
+          span.textContent = userIds.map(id => ALERJEN_MAP[id] || id).join(', ');
+        } else {
+          span.textContent = 'Tanımlı alerjeniniz yok (Profilinizden seçebilirsiniz).';
+        }
+      }
+    }
 
     async function yemekhaneleriYukle() {
       try {
@@ -247,9 +390,11 @@
 
       const hataKutusu = document.getElementById('hata-kutusu');
       const menuKarti = document.getElementById('menu-karti');
+      const uyariKutusu = document.getElementById('menu-alerjen-uyari-kutusu');
 
       hataKutusu.classList.add('bildirim-gizli');
       menuKarti.classList.add('bildirim-gizli');
+      if (uyariKutusu) uyariKutusu.style.display = 'none';
 
       try {
         const menu = await API.getTodayMenu(yhId, ogunId, tarih);
@@ -261,12 +406,59 @@
         document.getElementById('fiyat-personel').textContent = Number(menu.personel_fiyati).toFixed(2);
         document.getElementById('son-rezervasyon').textContent = menu.rezervasyon_son;
 
+        const user = API.getUser();
+
+        // Porsiyon ve Fiyat Ayarları
+        const isKahvalti = (parseInt(menu.ogun_id) === 1);
+        const lblYarim = document.getElementById('lbl-yarim-porsiyon');
+        const notKutu = document.getElementById('porsiyon-bilgi-notu');
+        const rdTam = document.getElementById('rd-porsiyon-tam');
+        const rdYarim = document.getElementById('rd-porsiyon-yarim');
+
+        const isOgrenci = (!user || user.rol === 'ogrenci');
+        const tamFiyat = isOgrenci ? menu.ogrenci_fiyati : menu.personel_fiyati;
+        const yarimFiyat = (tamFiyat * 0.60);
+
+        document.getElementById('tam-porsiyon-ucret').textContent = Number(tamFiyat).toFixed(2);
+        document.getElementById('yarim-porsiyon-ucret').textContent = Number(yarimFiyat).toFixed(2);
+
+        if (isKahvalti) {
+          lblYarim.style.display = 'flex';
+          rdYarim.disabled = false;
+          notKutu.style.display = 'block';
+          notKutu.innerHTML = 'ℹ️ <strong>Kahvaltı Kuralı:</strong> Kahvaltı öğününde kural gereği yalnızca tam porsiyon seçilebilir.';
+          porsiyonSec('tam');
+        } else {
+          lblYarim.style.display = 'flex';
+          rdYarim.disabled = false;
+          notKutu.style.display = 'none';
+          porsiyonSec('tam');
+        }
+
+        const spanAlerjen = document.getElementById('span-kayitli-alerjenler');
+        if (spanAlerjen) {
+          const userIds = kullaniciAlerjenleriniTopla();
+          if (userIds.length > 0) {
+            spanAlerjen.innerHTML = userIds.map(id => `<span style="display:inline-block; background:#DC2626; color:#fff; font-size:0.75rem; padding:0.1rem 0.4rem; border-radius:3px; margin:0 2px;">${ALERJEN_MAP[id] || id}</span>`).join(' ');
+          } else {
+            spanAlerjen.textContent = 'Tanımlı alerjeniniz bulunmamaktadır (Profilinizden seçebilirsiniz).';
+          }
+        }
+
         const liste = document.getElementById('yemek-listesi');
         liste.innerHTML = '';
+
+        let menudeAlerjiVarMi = false;
+        let menudekiAlerjenlerSet = new Set();
 
         menu.yemekler.forEach(y => {
           const li = document.createElement('li');
           li.className = 'yemek-ogesi';
+          li.style.padding = '0.85rem 1rem';
+          li.style.marginBottom = '0.6rem';
+          li.style.borderRadius = '6px';
+          li.style.border = '1px solid #E5E7EB';
+          li.style.transition = 'all 0.2s ease';
 
           let rozetHtml = '';
           if (y.vejetaryen) {
@@ -276,16 +468,44 @@
             rozetHtml += `<span class="rozet-alerjen">⚠️ Alerjen: ${y.alerjenler}</span>`;
           }
 
+          const eslesenAlerjenler = yemekteAlerjiBul(y);
+
+          if (eslesenAlerjenler.length > 0) {
+            menudeAlerjiVarMi = true;
+            eslesenAlerjenler.forEach(ad => menudekiAlerjenlerSet.add(ad));
+
+            li.style.border = "2px solid #DC2626";
+            li.style.borderLeft = "6px solid #DC2626";
+            li.style.background = "#FEF2F2";
+
+            const eslesenMetin = eslesenAlerjenler.join(', ');
+            rozetHtml += `
+              <span class="rozet-kullanici-alerjen">
+                🚨 DİKKAT: Alerji Riski! (Alerjeniniz: ${eslesenMetin})
+              </span>
+            `;
+          }
+
           li.innerHTML = `
             <div class="yemek-detay">
               <span class="kategori-etiket">${y.kategori}</span>
-              <span class="yemek-ad">${y.ad}</span>
-              ${rozetHtml ? `<div class="rozetler">${rozetHtml}</div>` : ''}
+              <span class="yemek-ad" style="font-size:1.05rem; font-weight:600; color:#111827;">${y.ad}</span>
+              ${rozetHtml ? `<div class="rozetler" style="display:flex; gap:0.4rem; flex-wrap:wrap; margin-top:0.35rem;">${rozetHtml}</div>` : ''}
             </div>
-            <div class="kalori-deger">${y.kalori} kcal</div>
+            <div class="kalori-deger" style="font-weight:600; color:#6B7280;">${y.kalori} kcal</div>
           `;
           liste.appendChild(li);
         });
+
+        if (uyariKutusu) {
+          if (menudeAlerjiVarMi) {
+            uyariKutusu.style.display = 'block';
+            document.getElementById('menu-alerjen-uyari-metni').innerHTML = 
+              `Bu menüde kişisel profilinizde seçtiğiniz alerjenleri içeren yemek(ler) tespit edilmiştir: <strong>${Array.from(menudekiAlerjenlerSet).join(', ')}</strong>. Lütfen kırmızı ile vurgulanan yemeklere dikkat ediniz.`;
+          } else {
+            uyariKutusu.style.display = 'none';
+          }
+        }
 
         document.getElementById('lbl-menu-id').textContent = '#' + menu.menu_id;
         window.aktifMenuId = menu.menu_id;
@@ -294,6 +514,28 @@
       } catch (err) {
         hataKutusu.textContent = err.message || 'Belirtilen kriterlerde menü bulunamadı.';
         hataKutusu.classList.remove('bildirim-gizli');
+      }
+    }
+
+    function porsiyonSec(deger) {
+      const rdTam = document.getElementById('rd-porsiyon-tam');
+      const rdYarim = document.getElementById('rd-porsiyon-yarim');
+      const lblTam = document.getElementById('lbl-tam-porsiyon');
+      const lblYarim = document.getElementById('lbl-yarim-porsiyon');
+      if (!lblTam || !lblYarim) return;
+
+      if (deger === 'tam') {
+        rdTam.checked = true;
+        lblTam.style.border = '2px solid var(--ana)';
+        lblTam.style.background = '#ECFDF5';
+        lblYarim.style.border = '1px solid #D1D5DB';
+        lblYarim.style.background = '#FFFFFF';
+      } else if (deger === 'yarim' && !rdYarim.disabled) {
+        rdYarim.checked = true;
+        lblYarim.style.border = '2px solid #B45309';
+        lblYarim.style.background = '#FFFBEB';
+        lblTam.style.border = '1px solid #D1D5DB';
+        lblTam.style.background = '#FFFFFF';
       }
     }
 
@@ -312,14 +554,16 @@
       hataKutusu.classList.add('bildirim-gizli');
 
       try {
-        const res = await API.makeReservation(menuId);
+        const seciliPorsiyon = document.querySelector('input[name="secili-porsiyon"]:checked')?.value || 'tam';
+        const res = await API.makeReservation(menuId, seciliPorsiyon);
+        const porsiyonYazi = seciliPorsiyon === 'yarim' ? 'Yarım Porsiyon (%60)' : 'Tam Porsiyon';
         hataKutusu.className = 'bildirim bildirim-basari';
-        hataKutusu.textContent = `Menü #${menuId} için rezervasyon başarıyla oluşturuldu! Kesilen Ücret: ${Number(res.ucret).toFixed(2)} TL, Kalan Bakiyeniz: ${Number(res.yeni_bakiye).toFixed(2)} TL.`;
+        hataKutusu.textContent = `Menü #${menuId} için ${porsiyonYazi} rezervasyonu başarıyla oluşturuldu! Kesilen Ücret: ${Number(res.ucret).toFixed(2)} TL, Kalan Bakiyeniz: ${Number(res.yeni_bakiye).toFixed(2)} TL.`;
         hataKutusu.classList.remove('bildirim-gizli');
         window.scrollTo({ top: 0, behavior: 'smooth' });
       } catch (err) {
         hataKutusu.className = 'bildirim bildirim-hata';
-        hataKutusu.textContent = err.message || 'Rezervasyon yapılamadı.';
+        hataKutusu.textContent = '❌ Hata: ' + (err.message || 'Rezervasyon yapılamadı.');
         hataKutusu.classList.remove('bildirim-gizli');
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
@@ -327,6 +571,7 @@
 
     // İlk yükleme
     (async function init() {
+      await kullaniciAlerjenleriniGetir();
       await yemekhaneleriYukle();
       await ogunleriYukle();
       await menuyuYukle();

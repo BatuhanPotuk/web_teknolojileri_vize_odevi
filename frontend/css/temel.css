@@ -78,6 +78,15 @@ input, select, textarea {
   color: var(--metin);
 }
 
+input[type="checkbox"], input[type="radio"] {
+  width: auto !important;
+  height: auto !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  cursor: pointer;
+  accent-color: var(--ana);
+}
+
 /* Dokunmatik ekranda rahat basılabilir boyut: en az 44 px */
 .dugme {
   display: inline-block;

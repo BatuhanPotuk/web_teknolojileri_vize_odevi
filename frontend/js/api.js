@@ -111,7 +111,7 @@ const API = {
     },
 
     // Rezervasyon & Bakiye Servisi İstekleri
-    async makeReservation(menuId) {
+    async makeReservation(menuId, porsiyon = 'tam') {
         const token = this.getToken();
         if (!token) throw new Error('Rezervasyon için giriş yapmalısınız.');
         const res = await fetch('/api/reservations', {
@@ -120,7 +120,7 @@ const API = {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
             },
-            body: JSON.stringify({ menu_id: menuId })
+            body: JSON.stringify({ menu_id: menuId, porsiyon: porsiyon })
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok) {
@@ -408,5 +408,56 @@ const API = {
             throw new Error(data.detail || data.hata || 'Değerlendirmeler alınamadı.');
         }
         return await res.json();
+    },
+
+    async getAllergens() {
+        const token = this.getToken();
+        const headers = {};
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+        let url = '/api/allergens';
+        if (token) url += `?token=${encodeURIComponent(token)}`;
+        let res = await fetch(url, { headers });
+        if (!res.ok) {
+            res = await fetch('/api/auth/allergens' + (token ? `?token=${encodeURIComponent(token)}` : ''), { headers });
+        }
+        if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            throw new Error(data.detail || data.hata || 'Alerjenler alınamadı.');
+        }
+        return await res.json();
+    },
+
+    async saveAllergens(allergenIds) {
+        const token = this.getToken();
+        if (!token) throw new Error('Alerjen kaydetmek için giriş yapmalısınız.');
+        const headers = {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        };
+        const body = JSON.stringify({ alerjen_idler: allergenIds });
+        let url = `/api/allergens?token=${encodeURIComponent(token)}`;
+        let res = await fetch(url, {
+            method: 'POST',
+            headers: headers,
+            body: body
+        });
+        if (!res.ok && (res.status === 401 || res.status === 404)) {
+            res = await fetch(`/api/auth/allergens?token=${encodeURIComponent(token)}`, {
+                method: 'POST',
+                headers: headers,
+                body: body
+            });
+        }
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+            throw new Error(data.detail || data.hata || 'Alerjenler kaydedilemedi.');
+        }
+        // Kullanıcı objesindeki alerjen listesini güncelle
+        const user = this.getUser();
+        if (user) {
+            user.alerjenler = data.kullanici_alerjenleri || allergenIds;
+            this.setUser(user);
+        }
+        return data;
     }
 };

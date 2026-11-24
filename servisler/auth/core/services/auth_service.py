@@ -26,6 +26,8 @@ class AuthService:
         # secrets.token_urlsafe ile güvenli jeton (token) üretimi (JWT kullanılmaz kuralı)
         token = secrets.token_urlsafe(32)
 
+        alerjenler = KullaniciRepository.kullanici_alerjen_idleri(kullanici.id)
+
         oturum_verisi = {
             "id": kullanici.id,
             "rol": kullanici.rol,
@@ -33,7 +35,8 @@ class AuthService:
             "soyad": kullanici.soyad,
             "eposta": kullanici.eposta,
             "ogrenci_no": kullanici.ogrenci_no,
-            "bakiye": float(kullanici.bakiye)
+            "bakiye": float(kullanici.bakiye),
+            "alerjenler": alerjenler
         }
 
         # Redis'te sakla (30 dakika = 1800 sn TTL)
@@ -61,4 +64,25 @@ class AuthService:
             OturumRepository.oturum_sure_uzat(token, ttl=1800)
             print(f"[AUTH REDIS] Oturum doğrulandı ve 1800s yenilendi: oturum:{token[:10]}...", flush=True)
         return oturum
+
+    @staticmethod
+    def alerjenleri_getir(kullanici_id: int) -> dict:
+        tum = KullaniciRepository.tum_alerjenler()
+        secili = KullaniciRepository.kullanici_alerjen_idleri(kullanici_id)
+        return {
+            "tum_alerjenler": tum,
+            "kullanici_alerjenleri": secili
+        }
+
+    @staticmethod
+    def alerjenleri_kaydet(kullanici_id: int, alerjen_idler: list, token: str = None) -> list:
+        KullaniciRepository.kullanici_alerjenleri_kaydet(kullanici_id, alerjen_idler)
+        # Eğer aktif oturum token'ı varsa Redis önbelleğindeki oturumu da güncelle
+        if token:
+            oturum = OturumRepository.oturum_getir(token)
+            if oturum:
+                oturum["alerjenler"] = alerjen_idler
+                OturumRepository.oturum_olustur(token, oturum, ttl=1800)
+        return alerjen_idler
+
 

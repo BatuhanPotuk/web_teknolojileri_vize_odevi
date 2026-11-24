@@ -926,7 +926,10 @@
             <td>#${r.id}</td>
             <td><strong>${r.ad_soyad}</strong><div style="font-size:0.8rem; color:var(--metin-soluk);">${r.eposta}</div></td>
             <td>${r.rol.toUpperCase()} ${r.ogrenci_no ? `<br><small>${r.ogrenci_no}</small>` : ''}</td>
-            <td>${r.tarih} - <strong>${r.ogun}</strong></td>
+            <td>
+              ${r.tarih} - <strong>${r.ogun}</strong>
+              ${r.porsiyon === 'yarim' ? '<br><small style="color:#B45309; font-weight:600; background:#FFFBEB; padding:2px 4px; border-radius:3px;">Yarım (%60)</small>' : '<br><small style="color:#166534;">Tam</small>'}
+            </td>
             <td>${r.yemekhane}</td>
             <td><strong>${Number(r.ucret).toFixed(2)} TL</strong></td>
             <td>${durumBadge}</td>

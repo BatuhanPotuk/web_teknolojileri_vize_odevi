@@ -138,5 +138,13 @@ def admin_foods_view(request):
     yemekler = MenuService.tum_yemekleri_getir()
     return JsonResponse(yemekler, safe=False)
 
+def admin_cache_flush_view(request):
+    silinen = MenuService.tum_onbellegi_temizle()
+    return JsonResponse({
+        "mesaj": f"Tüm menü önbelleği temizlendi ({silinen} kayıt silindi).",
+        "silinen": silinen
+    })
+
+
 
 

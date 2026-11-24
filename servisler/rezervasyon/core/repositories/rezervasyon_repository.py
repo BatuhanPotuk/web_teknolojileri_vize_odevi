@@ -3,15 +3,16 @@ from core.exceptions import IsKuraliHatasi
 
 class RezervasyonRepository:
     @staticmethod
-    def sp_rezervasyon_yap(kullanici_id: int, menu_id: int):
+    def sp_rezervasyon_yap(kullanici_id: int, menu_id: int, porsiyon: str = 'tam'):
         with connections['default'].cursor() as cursor:
             try:
-                cursor.execute("CALL sp_rezervasyon_yap(%s, %s)", [kullanici_id, menu_id])
+                cursor.execute("CALL sp_rezervasyon_yap(%s, %s, %s)", [kullanici_id, menu_id, porsiyon])
                 row = cursor.fetchone()
                 return {
                     "rezervasyon_id": row[0],
                     "ucret": float(row[1]),
-                    "yeni_bakiye": float(row[2])
+                    "yeni_bakiye": float(row[2]),
+                    "porsiyon": row[3] if len(row) > 3 else porsiyon
                 }
             except DatabaseError as err:
                 raise IsKuraliHatasi.mysql_hatasindan(err)
@@ -55,7 +56,7 @@ class RezervasyonRepository:
     def kullanici_rezervasyonlari(kullanici_id: int):
         with connections['default'].cursor() as cursor:
             sql = """
-                SELECT r.id, r.menu_id, r.durum, r.ucret, r.olusturma, r.iptal_zamani,
+                SELECT r.id, r.menu_id, r.durum, r.ucret, r.porsiyon, r.olusturma, r.iptal_zamani,
                        m.tarih, yh.ad AS yemekhane, o.ad AS ogun,
                        TIMESTAMP(m.tarih, o.son_saat) AS son_iptal_saati
                   FROM rezervasyonlar r
@@ -122,7 +123,7 @@ class RezervasyonRepository:
             sql = f"""
                 SELECT r.id, r.kullanici_id, CONCAT(k.ad, ' ', k.soyad) AS ad_soyad,
                        k.eposta, k.ogrenci_no, k.rol,
-                       r.menu_id, r.durum, r.ucret, r.olusturma, r.iptal_zamani,
+                       r.menu_id, r.durum, r.ucret, r.porsiyon, r.olusturma, r.iptal_zamani,
                        m.tarih, yh.ad AS yemekhane, o.ad AS ogun
                   FROM rezervasyonlar r
                   JOIN kullanicilar k ON k.id = r.kullanici_id

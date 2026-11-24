@@ -25,6 +25,9 @@ class MenuService:
 
         yemekler = []
         for r in rows:
+            alerjen_idler = []
+            if len(r) > 17 and r[17]:
+                alerjen_idler = [int(x) for x in str(r[17]).split(',') if x.strip()]
             yemekler.append({
                 "id": r[9],
                 "ad": r[10],
@@ -32,22 +35,31 @@ class MenuService:
                 "kategori_sira": r[13],
                 "kalori": r[14],
                 "vejetaryen": bool(r[15]),
-                "alerjenler": r[16] if r[16] else ""
+                "alerjenler": r[16] if r[16] else "",
+                "alerjen_idler": alerjen_idler
             })
 
         # Toplam kaloriyi uygulama hesaplar
         toplam_kalori = sum(y['kalori'] for y in yemekler)
+
+        ogun_id = ilk[4]
+        yarim_uygun = (ogun_id != 1) # Kahvaltıda yarım porsiyon seçilemez
+        ogrenci_fiyat = float(ilk[7])
+        personel_fiyat = float(ilk[8])
 
         menu_verisi = {
             "menu_id": menu_id,
             "tarih": str(ilk[1]),
             "yemekhane_id": ilk[2],
             "yemekhane": ilk[3],
-            "ogun_id": ilk[4],
+            "ogun_id": ogun_id,
             "ogun": ilk[5],
             "rezervasyon_son": str(ilk[6]),
-            "ogrenci_fiyati": float(ilk[7]),
-            "personel_fiyati": float(ilk[8]),
+            "ogrenci_fiyati": ogrenci_fiyat,
+            "personel_fiyati": personel_fiyat,
+            "yarim_porsiyon_uygun": yarim_uygun,
+            "ogrenci_yarim_fiyati": round(ogrenci_fiyat * 0.60, 2) if yarim_uygun else None,
+            "personel_yarim_fiyati": round(personel_fiyat * 0.60, 2) if yarim_uygun else None,
             "toplam_kalori": toplam_kalori,
             "yemekler": yemekler
         }
@@ -79,7 +91,12 @@ class MenuService:
         }
 
     @staticmethod
+    def tum_onbellegi_temizle() -> int:
+        return OnbellekRepository.tum_menuleri_temizle()
+
+    @staticmethod
     def menu_sil(menu_id: int) -> dict:
+
         row = MenuRepository.menu_bilgisi(menu_id)
         if not row:
             return None
@@ -121,6 +138,11 @@ class MenuService:
             
             # Role göre fiyatlandırma (yönetici personel fiyatı öder)
             fiyat = float(r[9]) if rol == 'ogrenci' else float(r[10])
+            ogrenci_fiyat = float(r[9])
+            personel_fiyat = float(r[10])
+            ogun_id = r[5]
+            yarim_uygun = (ogun_id != 1)
+            yarim_fiyat = round(fiyat * 0.60, 2) if yarim_uygun else None
 
             sonuclar.append({
                 "menu_id": menu_id,
@@ -129,12 +151,16 @@ class MenuService:
                 "yemekhane_id": r[2],
                 "yemekhane": r[3],
                 "kapasite": kapasite,
-                "ogun_id": r[5],
+                "ogun_id": ogun_id,
                 "ogun": r[6],
                 "rezervasyon_son": str(rezervasyon_son),
                 "fiyat": fiyat,
-                "ogrenci_fiyati": float(r[9]),
-                "personel_fiyati": float(r[10]),
+                "yarim_fiyat": yarim_fiyat,
+                "ogrenci_fiyati": ogrenci_fiyat,
+                "personel_fiyati": personel_fiyat,
+                "yarim_porsiyon_uygun": yarim_uygun,
+                "ogrenci_yarim_fiyati": round(ogrenci_fiyat * 0.60, 2) if yarim_uygun else None,
+                "personel_yarim_fiyati": round(personel_fiyat * 0.60, 2) if yarim_uygun else None,
                 "can_reserve": can_reserve,
                 "kalan_yer": kapasite # Rezervasyon servisi doluluk iç çağrısı ile güncellenir
             })

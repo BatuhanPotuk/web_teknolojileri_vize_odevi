@@ -11,6 +11,7 @@ from core.views.menu_views import (
     admin_menu_items_view,
     admin_menu_item_delete_view,
     admin_foods_view,
+    admin_cache_flush_view,
 )
 
 urlpatterns = [
@@ -27,6 +28,7 @@ urlpatterns = [
     path('api/admin/menus/<int:id>/items', admin_menu_items_view, name='admin_menu_items'),
     path('api/admin/menus/<int:id>/items/<int:yemek_id>', admin_menu_item_delete_view, name='admin_menu_item_delete'),
     path('api/admin/foods', admin_foods_view, name='admin_foods'),
+    path('api/admin/cache/flush', admin_cache_flush_view, name='admin_cache_flush'),
 ]
 
 

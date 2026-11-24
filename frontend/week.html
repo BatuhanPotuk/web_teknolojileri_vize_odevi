@@ -3,8 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>Haftalık Menü & Rezervasyon · Yemekhane Otomasyonu</title>
-  <link rel="stylesheet" href="/css/temel.css">
+  <link rel="stylesheet" href="/css/temel.css?v=4.2">
   <style>
     .nav-bar {
       background: var(--ana-koyu);
@@ -157,7 +160,7 @@
     </div>
   </main>
 
-  <script src="/js/api.js"></script>
+  <script src="/js/api.js?v=4.2"></script>
   <script>
     // Başlangıç tarihi olarak bugün
     const bugun = new Date().toISOString().split('T')[0];
@@ -212,14 +215,40 @@
         menuler.forEach(m => {
           const tr = document.createElement('tr');
 
-          // can_reserve kontrolü
+          // can_reserve ve porsiyon kontrolü
+          let isKahvalti = (parseInt(m.ogun_id) === 1);
           let butonHtml = '';
           if (m.can_reserve) {
-            butonHtml = `<button class="dugme" onclick="rezervasyonYap(${m.menu_id})">Rezervasyon Yap</button>`;
+            if (isKahvalti) {
+              butonHtml = `
+                <select id="sel-porsiyon-${m.menu_id}" style="padding:0.45rem; margin-bottom:0.4rem; font-size:0.85rem; font-weight:600; border:2px solid var(--cizgi); border-radius:4px; width:100%; background:#fff; cursor:pointer;">
+                  <option value="tam">Tam Porsiyon (${Number(m.fiyat).toFixed(2)} TL)</option>
+                  <option value="yarim">Yarım Porsiyon</option>
+                </select>
+                <button class="dugme" style="width:100%;" onclick="rezervasyonYap(${m.menu_id})">Rezervasyon Yap</button>
+              `;
+            } else {
+              let yarimUcret = (Number(m.fiyat) * 0.60).toFixed(2);
+              butonHtml = `
+                <select id="sel-porsiyon-${m.menu_id}" style="padding:0.45rem; margin-bottom:0.4rem; font-size:0.875rem; font-weight:600; border:2px solid var(--ana); border-radius:4px; width:100%; background:#fff; cursor:pointer;">
+                  <option value="tam">Tam Porsiyon (${Number(m.fiyat).toFixed(2)} TL)</option>
+                  <option value="yarim">Yarım Porsiyon (%60: ${yarimUcret} TL)</option>
+                </select>
+                <button class="dugme" style="width:100%;" onclick="rezervasyonYap(${m.menu_id})">Rezervasyon Yap</button>
+              `;
+            }
           } else {
             butonHtml = `<button class="dugme" disabled title="Rezervasyon süresi dolmuştur">Süresi Doldu</button>
                          <br><span class="durum-pasif">Rezervasyon kapandı</span>`;
           }
+
+          let fiyatDetayHtml = `
+            <span class="fiyat-etiket">${Number(m.fiyat).toFixed(2)} TL</span>
+          `;
+          if (!isKahvalti) {
+            fiyatDetayHtml += `<br><small style="color:#B45309; font-weight:600;">Yarım: ${(Number(m.fiyat)*0.60).toFixed(2)} TL</small>`;
+          }
+          fiyatDetayHtml += `<br><small style="color:var(--metin-soluk);">(Öğr: ${Number(m.ogrenci_fiyati).toFixed(0)}₺ / Pers: ${Number(m.personel_fiyati).toFixed(0)}₺)</small>`;
 
           tr.innerHTML = `
             <td>
@@ -230,12 +259,9 @@
             <td>
               <span class="kontenjan-rozet">${m.kalan_yer} / ${m.kapasite} Boş Yer</span>
             </td>
-            <td>
-              <span class="fiyat-etiket">${Number(m.fiyat).toFixed(2)} TL</span>
-              <br><small style="color:var(--metin-soluk);">(Öğr: ${Number(m.ogrenci_fiyati).toFixed(0)}₺ / Pers: ${Number(m.personel_fiyati).toFixed(0)}₺)</small>
-            </td>
+            <td>${fiyatDetayHtml}</td>
             <td>${m.rezervasyon_son}</td>
-            <td>${butonHtml}</td>
+            <td style="min-width:140px;">${butonHtml}</td>
           `;
           govde.appendChild(tr);
         });
@@ -244,7 +270,7 @@
       }
     }
 
-    async function rezervasyonYap(menuId) {
+    async function rezervasyonYap(menuId, zorunluPorsiyon = null) {
       const user = API.getUser();
       if (!user) {
         alert('Rezervasyon yapabilmek için lütfen önce giriş yapın.');
@@ -252,13 +278,15 @@
         return;
       }
 
+      const porsiyon = zorunluPorsiyon || document.getElementById(`sel-porsiyon-${menuId}`)?.value || 'tam';
       const bildirim = document.getElementById('bildirim-alani');
       bildirim.classList.add('bildirim-gizli');
 
       try {
-        const res = await API.makeReservation(menuId);
+        const res = await API.makeReservation(menuId, porsiyon);
+        const porsiyonText = porsiyon === 'yarim' ? 'Yarım Porsiyon (%60)' : 'Tam Porsiyon';
         bildirim.className = 'bildirim bildirim-basari';
-        bildirim.textContent = `Rezervasyon başarıyla yapıldı! Ücret: ${res.ucret} TL, Yeni Bakiye: ${res.yeni_bakiye} TL (Rezervasyon No: #${res.rezervasyon_id})`;
+        bildirim.textContent = `Rezervasyon (${porsiyonText}) başarıyla yapıldı! Ücret: ${Number(res.ucret).toFixed(2)} TL, Yeni Bakiye: ${Number(res.yeni_bakiye).toFixed(2)} TL (Rezervasyon No: #${res.rezervasyon_id})`;
         bildirim.classList.remove('bildirim-gizli');
 
         // Bakiye çubuğunu güncelle
@@ -266,7 +294,7 @@
         window.scrollTo({ top: 0, behavior: 'smooth' });
       } catch (err) {
         bildirim.className = 'bildirim bildirim-hata';
-        bildirim.textContent = err.message || 'Rezervasyon işlemi başarısız oldu.';
+        bildirim.textContent = '❌ Hata: ' + (err.message || 'Rezervasyon işlemi başarısız oldu.');
         bildirim.classList.remove('bildirim-gizli');
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }

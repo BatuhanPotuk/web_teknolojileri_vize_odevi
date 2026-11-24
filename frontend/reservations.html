@@ -100,7 +100,7 @@
           <tr>
             <th>Rez No</th>
             <th>Tarih & Yemekhane</th>
-            <th>Öğün</th>
+            <th>Öğün & Porsiyon</th>
             <th>Ücret</th>
             <th>Durum</th>
             <th>Son İptal Saati</th>
@@ -154,13 +154,20 @@
             islemHtml = `<span style="color:var(--metin-soluk); font-size:0.85rem;">İade Yapıldı</span>`;
           }
 
+          const porsiyonText = r.porsiyon === 'yarim'
+            ? `<span style="display:inline-block; font-size:0.75rem; background:#FFFBEB; color:#B45309; padding:0.15rem 0.4rem; border-radius:4px; font-weight:600; border:1px solid #FCD34D;">Yarım Porsiyon (%60)</span>`
+            : `<span style="display:inline-block; font-size:0.75rem; background:#F0FDF4; color:#166534; padding:0.15rem 0.4rem; border-radius:4px; font-weight:600;">Tam Porsiyon</span>`;
+
           tr.innerHTML = `
             <td><strong>#${r.id}</strong></td>
             <td>
               <strong>${r.tarih}</strong><br>
               <span style="color:var(--metin-soluk); font-size:0.85rem;">${r.yemekhane}</span>
             </td>
-            <td><strong>${r.ogun}</strong></td>
+            <td>
+              <strong>${r.ogun}</strong><br>
+              ${porsiyonText}
+            </td>
             <td><strong>${Number(r.ucret).toFixed(2)} TL</strong></td>
             <td>${durumRozeti}</td>
             <td style="font-size:0.85rem; color:var(--metin-soluk);">${r.son_iptal_saati || '-'}</td>

@@ -16,6 +16,9 @@ class IsKuraliHatasi(Exception):
         # Temizle
         mesaj = mesaj.strip()
 
+        if "Kahvalt" in mesaj and "porsiyon" in mesaj:
+            return cls(mesaj="Kahvaltı öğününde yarım porsiyon seçilemez.", durum_kodu=409)
+
         # Durum kodu eşleştirme
         if "Bakiye yetersiz" in mesaj:
             kod = 402
@@ -24,7 +27,10 @@ class IsKuraliHatasi(Exception):
             "rezervasyon süresi doldu",
             "zaten rezervasyonunuz var",
             "iptal süresi doldu",
-            "Yalnızca aktif rezervasyonlar"
+            "Yalnızca aktif rezervasyonlar",
+            "Kahvalt",
+            "kahvalt",
+            "porsiyon"
         ]):
             kod = 409
         elif any(k in mesaj for k in ["bulunamadı", "Bulunamadı"]):

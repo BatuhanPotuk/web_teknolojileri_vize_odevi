@@ -3,8 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>Giriş Yap · Yemekhane Otomasyonu</title>
-  <link rel="stylesheet" href="/css/temel.css">
+  <link rel="stylesheet" href="/css/temel.css?v=4.2">
   <style>
     .kart {
       background: var(--yuzey);
@@ -89,6 +92,21 @@
         <p><strong>Güncel Bakiye:</strong> <br><span class="bakiye-vurgu" id="kullanici-bakiye"></span> TL</p>
       </div>
 
+      <!-- ALERJEN TERCİHLERİ BÖLÜMÜ -->
+      <div class="alerjen-kutu" style="background:#FFFBEB; border:1px solid #FCD34D; border-radius:var(--kose); padding:1rem; margin-bottom:1rem;">
+        <h3 style="margin-top:0; margin-bottom:0.5rem; font-size:1rem; color:#B45309; display:flex; align-items:center; gap:0.4rem;">
+          ⚠️ Alerjen Tercihlerim
+        </h3>
+        <p style="font-size:0.85rem; color:#78350F; margin-bottom:0.75rem;">
+          Alerjiniz olan maddeleri seçin. Menü sayfalarında bu alerjenleri içeren yemekler sizin için özel uyarıyla vurgulanır.
+        </p>
+        <div id="alerjen-secim-listesi" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:0.4rem; margin-bottom:0.75rem;">
+          Alerjenler yükleniyor…
+        </div>
+        <button type="button" id="btn-alerjen-kaydet" class="dugme" style="background:#B45309; width:100%; font-size:0.9rem; padding:0.5rem;" onclick="alerjenleriKaydet()">Alerjenlerimi Kaydet</button>
+        <div id="alerjen-bildirim" style="margin-top:0.5rem; font-size:0.85rem; display:none; padding:0.4rem; border-radius:4px;"></div>
+      </div>
+
       <div style="display:flex; flex-direction:column; gap:0.5rem; margin-bottom:1rem;">
         <a href="/menu.html" class="dugme" style="text-align:center;">🍲 Günün Menüsünü Gör</a>
         <a href="/week.html" class="dugme" style="text-align:center; background:#12503F;">📅 Haftalık Menü & Rezervasyon</a>
@@ -105,7 +123,7 @@
     </section>
   </main>
 
-  <script src="/js/api.js"></script>
+  <script src="/js/api.js?v=4.2"></script>
   <script>
     function ekraniGuncelle() {
       const user = API.getUser();
@@ -134,9 +152,58 @@
         } else {
           linkAdmin.classList.add('bildirim-gizli');
         }
+
+        alerjenleriYukle();
       } else {
         girisKarti.classList.remove('bildirim-gizli');
         profilKarti.classList.add('bildirim-gizli');
+      }
+    }
+
+    async function alerjenleriYukle() {
+      const secimAlani = document.getElementById('alerjen-secim-listesi');
+      try {
+        const data = await API.getAllergens();
+        const tum = data.tum_alerjenler || [];
+        const secili = data.kullanici_alerjenleri || [];
+
+        secimAlani.innerHTML = tum.map(a => `
+          <label style="display:flex; align-items:center; gap:0.45rem; font-size:0.875rem; cursor:pointer; background:#fff; padding:0.45rem 0.6rem; border:1px solid #D1D5DB; border-radius:4px; user-select:none;">
+            <input type="checkbox" name="alerjen" value="${a.id}" ${secili.includes(a.id) ? 'checked' : ''} style="width:16px !important; height:16px !important; accent-color:var(--ana);">
+            <span style="font-weight:500;">${a.ad}</span>
+          </label>
+        `).join('');
+      } catch (err) {
+        secimAlani.innerHTML = '<span style="color:var(--hata); font-size:0.85rem;">Alerjen listesi yüklenemedi.</span>';
+      }
+    }
+
+    async function alerjenleriKaydet() {
+      const btn = document.getElementById('btn-alerjen-kaydet');
+      const bildirim = document.getElementById('alerjen-bildirim');
+      const seciliCheckboxlar = document.querySelectorAll('#alerjen-secim-listesi input[name="alerjen"]:checked');
+      const seciliIdler = Array.from(seciliCheckboxlar).map(cb => parseInt(cb.value));
+
+      btn.disabled = true;
+      btn.textContent = 'Kaydediliyor…';
+      bildirim.style.display = 'none';
+
+      try {
+        const sonuc = await API.saveAllergens(seciliIdler);
+        bildirim.style.display = 'block';
+        bildirim.style.background = '#ECFDF5';
+        bildirim.style.color = '#065F46';
+        bildirim.style.border = '1px solid #A7F3D0';
+        bildirim.textContent = sonuc.mesaj || 'Alerjen tercihleriniz başarıyla güncellendi!';
+      } catch (err) {
+        bildirim.style.display = 'block';
+        bildirim.style.background = '#FEF2F2';
+        bildirim.style.color = '#991B1B';
+        bildirim.style.border = '1px solid #FECACA';
+        bildirim.textContent = 'Hata: ' + (err.message || 'Kaydedilemedi.');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Alerjenlerimi Kaydet';
       }
     }
 
